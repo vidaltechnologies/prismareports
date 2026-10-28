@@ -67,6 +67,12 @@ Everything runs in the browser. Your data is never sent to a server.
   **Download slides** button offers both formats. In the `.pptx`, titles, text, charts and
   tables are native PowerPoint elements: you can edit the text, change colors and open each
   chart's data in PowerPoint, Keynote or Google Slides.
+- **Templates:** **Template → Save template** stores the report choices in a `.prisma.json`
+  file: columns, calculation, theme, category filter, slide order and hidden slides, and edited
+  titles. Next month, open the new spreadsheet and use **Template → Open template** to rebuild
+  the same report with the new numbers. The spreadsheet is never stored in the file, and the
+  period and rewritten highlights are left out, since they change every month. If a column is
+  missing from the new spreadsheet, the page says so and uses the automatic choice.
 - **Portuguese, English and Spanish:** the flags in the top-right corner switch the language
   of the page, the slides, the highlights and the number and date format. The sample data
   switches too, with translated column names and values. The choice is saved in the browser;
@@ -104,6 +110,10 @@ The interface is currently in Portuguese.
 | Dashboard in Spanish | Download as PDF or PowerPoint |
 | --- | --- |
 | ![Dashboard in Spanish, with Spanish number format](docs/screenshots/idioma-espanhol.png) | ![Download slides menu with PDF and PowerPoint options](docs/screenshots/download.png) |
+
+### Templates
+
+![Template menu with Save template and Open template](docs/screenshots/template.png)
 
 ### Editable PowerPoint
 
@@ -205,7 +215,7 @@ src/
 │   ├── SlideEditor.tsx     # Slides tab: preview, order and hidden slides
 │   ├── ThemePicker.tsx     # Theme dropdown
 │   ├── LanguageSwitcher.tsx # Flags to switch the language
-│   ├── ExportMenu.tsx      # Download slides button, with PDF and PowerPoint
+│   ├── MenuButton.tsx      # Menu buttons: Template and Download slides
 │   ├── ScaledSlide.tsx     # 1280×720 slide scaled down to fit the screen
 │   ├── ExportStage.tsx     # Renders slides at full size for the PDF
 │   ├── ChartCanvas.tsx     # Chart.js chart as a component
@@ -218,15 +228,12 @@ src/
     ├── charts.ts           # Chart configuration
     ├── exportSlides.ts     # Slide capture, PDF generation and download
     ├── pptx.ts             # PowerPoint built from native elements, slide by slide
+    ├── template.ts         # Save, validate and apply templates (.prisma.json)
     ├── format.ts           # Numbers, percentages and dates in the chosen language
     └── sample.ts           # Sample data, in the three languages
 exemplos/                   # Test spreadsheet
 docs/                       # Logo and images used in this README
 ```
-
-## Next steps
-
-- Save a report (settings, filters and text) to open again later.
 
 ---
 

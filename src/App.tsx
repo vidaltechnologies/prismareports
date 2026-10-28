@@ -2,16 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { WorkBook } from 'xlsx'
 import { Controls } from './components/Controls'
 import { Dashboard, uiPalette } from './components/Dashboard'
-import { ExportMenu, type ExportFormat } from './components/ExportMenu'
 import { ExportStage } from './components/ExportStage'
 import { FiltersBar } from './components/FiltersBar'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
+import { MenuButton } from './components/MenuButton'
 import { SlideEditor, visibleSlides, type DeckItem } from './components/SlideEditor'
 import { ThemePicker } from './components/ThemePicker'
 import { Uploader } from './components/Uploader'
 import { getLocale, LOCALES, setLocale, t, type Locale } from './i18n'
 import { captureSlides, saveBlob, slidesToPdf } from './lib/exportSlides'
 import { reportToPptx } from './lib/pptx'
+import { applyTemplate, makeTemplate, parseTemplate, TEMPLATE_EXT } from './lib/template'
 import { int, slug, today } from './lib/format'
 import { readWorkbook, sheetToDataset, type Dataset } from './lib/parse'
 import { applyFilters, autoTitle, buildReport, defaultSettings, NO_FILTERS, type Filters, type Settings } from './lib/report'
@@ -20,6 +21,7 @@ import { SLIDES, type SlideId, type TextEdit, type TextEdits } from './slides/sl
 import { themeById, type ThemeId } from './themes'
 
 type View = 'painel' | 'slides'
+type ExportFormat = 'pdf' | 'pptx'
 
 const store = {
   get(k: string) {
@@ -87,6 +89,7 @@ export default function App() {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [edits, setEdits] = useState<TextEdits>(NO_EDITS)
   const fileInput = useRef<HTMLInputElement>(null)
+  const templateInput = useRef<HTMLInputElement>(null)
   const dark = useDarkMode()
   const theme = themeById(themeId)
 
@@ -226,6 +229,31 @@ export default function App() {
 
   // O PDF é uma captura dos slides renderizados (ExportStage); o PowerPoint é montado com elementos nativos, editáveis.
   const onStageReady = useCallback((nodes: HTMLElement[]) => finishExport('pdf', async () => slidesToPdf(await captureSlides(nodes))), [finishExport])
+  const onTemplate = async (action: 'save' | 'open') => {
+    if (action === 'open') return templateInput.current?.click()
+    const T = t()
+    const json = JSON.stringify(makeTemplate(settings, themeId, filters, deck, edits), null, 2)
+    const result = await saveBlob(new Blob([json], { type: 'application/json' }), `${slug(settings.title)}${TEMPLATE_EXT}`)
+    setToast(result === 'saved' ? T.templateSaved : result === 'declined' ? T.declined : T.saveFailed)
+  }
+
+  const onTemplateFile = async (file: File) => {
+    const T = t()
+    try {
+      const tpl = parseTemplate(await file.text())
+      const { settings: next, filters: nextFilters, missing } = applyTemplate(tpl, ds)
+      setSettings(next)
+      setFilters(nextFilters)
+      setThemeId(tpl.theme)
+      setDeck(tpl.deck)
+      setEdits({ titles: tpl.titles, insights: {} })
+      setToast(missing.length ? T.templateMissing(missing.join(', ')) : T.templateApplied(file.name.replace(TEMPLATE_EXT, '').replace(/\.json$/, '')))
+    } catch (e) {
+      console.error(e)
+      setToast(T.templateInvalid)
+    }
+  }
+
   const onExport = (format: ExportFormat) => {
     setExporting(format)
     if (format === 'pptx') finishExport('pptx', () => reportToPptx(exportSlides, report, theme, edits))
@@ -250,7 +278,45 @@ export default function App() {
             <button type="button" onClick={() => fileInput.current?.click()}>
               {t().openFile}
             </button>
-            <ExportMenu busy={!!exporting} disabled={!exportSlides.length} onExport={onExport} />
+            <MenuButton
+              label={t().template}
+              icon={
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M3 2.5h7l3 3v8H3Z M10 2.5v3h3 M5.5 9h5 M5.5 11.5h3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+                </svg>
+              }
+              items={[
+                { id: 'save', badge: '↓', title: t().saveTemplate, hint: t().saveTemplateHint },
+                { id: 'open', badge: '↑', title: t().openTemplate, hint: t().openTemplateHint },
+              ]}
+              onSelect={onTemplate}
+            />
+            <input
+              ref={templateInput}
+              type="file"
+              accept=".json,application/json"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) onTemplateFile(f)
+                e.target.value = ''
+              }}
+            />
+            <MenuButton
+              primary
+              disabled={!!exporting || !exportSlides.length}
+              label={exporting ? t().generating : t().exportLabel}
+              icon={
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M8 2v8m0 0 3-3m-3 3L5 7M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              }
+              items={[
+                { id: 'pdf', badge: 'PDF', title: t().downloadPdf, hint: t().pdfHint, aside: '.pdf' },
+                { id: 'pptx', badge: 'PPTX', title: t().downloadPptx, hint: t().pptxHint, aside: '.pptx' },
+              ]}
+              onSelect={onExport}
+            />
           </div>
           <LanguageSwitcher value={lang} onChange={changeLang} />
         </div>

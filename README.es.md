@@ -69,6 +69,12 @@ Todo funciona en el navegador. Los datos no se envían a ningún servidor.
   `.pptx`, títulos, textos, gráficos y tablas son elementos nativos de PowerPoint: puedes
   editar el texto, cambiar colores y abrir los datos de cada gráfico en PowerPoint, Keynote o
   Presentaciones de Google.
+- **Plantillas:** en **Plantilla → Guardar plantilla**, las elecciones del informe van a un
+  archivo `.prisma.json`: columnas, cálculo, tema, filtro de categoría, orden y diapositivas
+  ocultas y títulos editados. El mes siguiente, abre la hoja nueva y usa **Plantilla → Abrir
+  plantilla** para rehacer el mismo informe con los números nuevos. La hoja nunca se guarda en
+  el archivo, y el período y los destacados reescritos quedan fuera, porque cambian cada mes.
+  Si falta alguna columna en la hoja nueva, la página avisa y usa la elección automática.
 - **Portugués, inglés y español:** las banderas en la esquina superior derecha cambian el
   idioma de la página, las diapositivas, los destacados y el formato de números y fechas. Los
   datos de ejemplo también cambian, con los nombres de columnas y valores traducidos. La
@@ -106,6 +112,10 @@ Por ahora, la interfaz está en portugués.
 | Panel en español | Descarga en PDF o PowerPoint |
 | --- | --- |
 | ![Panel en español, con números en formato español](docs/screenshots/idioma-espanhol.png) | ![Menú Descargar diapositivas con las opciones PDF y PowerPoint](docs/screenshots/download.png) |
+
+### Plantillas
+
+![Menú Plantilla con las opciones Guardar plantilla y Abrir plantilla](docs/screenshots/template.png)
 
 ### PowerPoint editable
 
@@ -207,7 +217,7 @@ src/
 │   ├── SlideEditor.tsx     # Pestaña Slides: vista previa, orden y diapositivas ocultas
 │   ├── ThemePicker.tsx     # Lista desplegable de temas
 │   ├── LanguageSwitcher.tsx # Banderas para cambiar el idioma
-│   ├── ExportMenu.tsx      # Botón Descargar diapositivas, con PDF y PowerPoint
+│   ├── MenuButton.tsx      # Botones con menú: Plantilla y Descargar diapositivas
 │   ├── ScaledSlide.tsx     # Diapositiva de 1280×720 reducida para caber en pantalla
 │   ├── ExportStage.tsx     # Renderiza las diapositivas a tamaño real para el PDF
 │   ├── ChartCanvas.tsx     # Gráfico de Chart.js como componente
@@ -220,15 +230,12 @@ src/
     ├── charts.ts           # Configuración de los gráficos
     ├── exportSlides.ts     # Captura de diapositivas, generación del PDF y descarga
     ├── pptx.ts             # PowerPoint con elementos nativos, diapositiva por diapositiva
+    ├── template.ts         # Guardar, validar y aplicar plantillas (.prisma.json)
     ├── format.ts           # Números, porcentajes y fechas en el idioma elegido
     └── sample.ts           # Datos de ejemplo, en los tres idiomas
 exemplos/                   # Hoja de prueba
 docs/                       # Logo e imágenes usadas en este README
 ```
-
-## Próximos pasos
-
-- Guardar un informe (configuración, filtros y textos) para abrirlo de nuevo después.
 
 ---
 

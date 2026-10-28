@@ -263,6 +263,7 @@ button.link { border: 0; background: none; padding: 0; color: var(--accent); tex
 .file-badge { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; font: 700 11px/1 var(--mono); color: #fff; }
 .file-badge.pdf { background: #c7362b; }
 .file-badge.pptx { background: #c4502a; }
+.file-badge.save, .file-badge.open { background: var(--accent); color: var(--accent-ink); font-size: 18px; }
 
 @media (max-width: 560px) {
   /* No celular o cabeçalho é alto demais para ficar preso no topo. */
@@ -270,6 +271,6 @@ button.link { border: 0; background: none; padding: 0; color: var(--accent); tex
   .lang { order: -1; margin-left: auto; }
   .brand { order: -2; }
   .menu-wrap { flex: 1; display: flex; }
-  .menu-wrap .export-btn { flex: 1; justify-content: center; white-space: nowrap; }
+  .menu-wrap .menu-btn { flex: 1; justify-content: center; white-space: nowrap; }
   .menu { left: 0; right: auto; width: 100%; }
 }
