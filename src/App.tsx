@@ -264,9 +264,14 @@ export default function App() {
       <header className="bar">
         <div className="wrap bar-row">
           <div className="brand">
-            <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-              <path d="M13 2 24 22H2Z" fill="none" stroke="var(--accent)" strokeWidth="2.2" strokeLinejoin="round" />
-              <path d="M13 9v13" stroke="var(--accent-2)" strokeWidth="2.2" />
+            {/* Logo: um feixe de luz entra no prisma e sai em três cores. */}
+            <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+              <path d="M3 37 18 31" stroke="var(--fg)" strokeWidth="3.8" strokeLinejoin="round" strokeLinecap="round" />
+              <path d="M18 31 33 28" stroke="var(--fg)" strokeOpacity=".35" strokeWidth="3.2" strokeLinejoin="round" strokeLinecap="round" />
+              <path d="M33 28 60 15" stroke="var(--accent)" strokeWidth="4.2" strokeLinejoin="round" strokeLinecap="round" />
+              <path d="M33 28 61 29" stroke="var(--accent-2)" strokeWidth="4.2" strokeLinejoin="round" strokeLinecap="round" />
+              <path d="M33 28 59 43" stroke="var(--danger)" strokeWidth="4.2" strokeLinejoin="round" strokeLinecap="round" />
+              <path d="M26 13 43 47H9Z" fill="none" stroke="var(--accent)" strokeWidth="4.6" strokeLinejoin="round" strokeLinecap="round" />
             </svg>
             Prisma Reports
           </div>
