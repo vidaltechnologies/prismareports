@@ -5,6 +5,7 @@ import type { ChartLook } from '../lib/charts'
 import { compact, fmt, int, pct, today } from '../lib/format'
 import { topWithOthers, type Report } from '../lib/report'
 import { t } from '../i18n'
+import { coverLogoColors, LOGO_BOX, LOGO_LINES, LOGO_PRISM } from '../logo'
 import type { Theme } from '../themes'
 
 export const SLIDE_W = 1280
@@ -153,13 +154,21 @@ function Frame({ report, index, total, kicker, title, children, slide, edits, on
 }
 
 function Cover({ report, theme, onEdit }: SlideProps) {
-  const s = theme.slide
+  const logo = coverLogoColors(theme)
   return (
     <div className="slide-inner cover">
-      <svg className="cover-art" viewBox="0 0 420 420" aria-hidden="true">
-        <path d="M210 30 400 400H20Z" fill={s.coverShape} />
-        <path d="M210 30v370" stroke={s.coverShape2} strokeWidth="10" />
-        <path d="M210 30 400 400H210Z" fill={s.coverBg} opacity="0.18" />
+      <svg className="cover-art" viewBox={`${LOGO_BOX.x} ${LOGO_BOX.y} ${LOGO_BOX.w} ${LOGO_BOX.h}`} aria-hidden="true">
+        {LOGO_LINES.map((l, i) => (
+          <path
+            key={i}
+            d={`M${l.from} ${l.to}`}
+            stroke={typeof l.role === 'number' ? logo.rays[l.role] : logo.beam}
+            strokeOpacity={l.role === 'beamInside' ? 0.35 : 1}
+            strokeWidth={l.width}
+            strokeLinecap="round"
+          />
+        ))}
+        <path d={`M${LOGO_PRISM.points.join(' ')}Z`} fill="none" stroke={logo.prism} strokeWidth={LOGO_PRISM.width} strokeLinejoin="round" />
       </svg>
       <div className="s-kicker cover-kicker">Prisma Reports</div>
       <Editable as="h1" className="cover-title" value={report.settings.title} onChange={onEdit ? (text) => onEdit({ kind: 'title', slide: 'capa', text }) : undefined} />
