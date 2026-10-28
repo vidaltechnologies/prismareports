@@ -56,10 +56,18 @@ Everything runs in the browser. Your data is never sent to a server.
   sum, average or count. Dashboard and slides update instantly.
 - **Slide editor:** a preview of every slide on the page, where you can reorder and hide
   slides. What you see in the preview is exactly what goes into the PDF.
+- **Filters:** narrow the report to a period (from one month to another, using the date
+  column) and to some values of a category. Dashboard, slides and PDF show only the
+  filtered rows and state the filter in use.
+- **Editable text:** click any slide title or highlight in the preview and rewrite it.
+  Clearing the text brings back the automatic one, and **Restaurar textos automáticos**
+  (restore automatic text) undoes every edit.
+- **Two-column comparison:** in **Comparar com** (compare with), pick a second numeric
+  column to see both side by side per group, each on its own axis.
 - **Three themes:** Prisma, Executivo and Vibrante, each with its own colors and fonts,
   picked from a dropdown. The theme applies to the page, the slides and the PDF.
 - **PDF slides:** a 16:9 presentation with cover, key figures, shares, bars, distribution,
-  monthly trend, highlights and ranking.
+  monthly trend, comparison, highlights, ranking and a detail table.
 - **Light and dark mode:** the page follows the system setting.
 - **Responsive:** works on desktop and mobile.
 
@@ -79,6 +87,12 @@ The interface is currently in Portuguese.
 | --- |
 | ![Report cover in the three themes](docs/screenshots/temas-capas.png) |
 | ![Bar chart slide in the three themes](docs/screenshots/temas-graficos.png) |
+
+### Filters and text editing
+
+![Filters by period and by product](docs/screenshots/filtros.png)
+
+![A highlight being edited right in the slide preview](docs/screenshots/edicao.png)
 
 ### Dashboard
 
@@ -103,6 +117,10 @@ The interface is currently in Portuguese.
 | Highlights | Ranking |
 | --- | --- |
 | ![Highlights slide](docs/screenshots/slide-destaques.png) | ![Ranking slide](docs/screenshots/slide-ranking.png) |
+
+| Two-column comparison | Details |
+| --- | --- |
+| ![Slide comparing revenue and quantity](docs/screenshots/slide-comparacao.png) | ![Slide with a detail table](docs/screenshots/slide-detalhes.png) |
 
 ### Mobile
 
@@ -164,7 +182,8 @@ src/
 ├── styles.css              # Page and slide styles
 ├── components/
 │   ├── Uploader.tsx        # Drop area and file picker
-│   ├── Controls.tsx        # Title, sheet, grouping, value, calculation and timeline
+│   ├── Controls.tsx        # Title, sheet, grouping, value, comparison and timeline
+│   ├── FiltersBar.tsx      # Period and category filters
 │   ├── Dashboard.tsx       # Dashboard tab
 │   ├── SlideEditor.tsx     # Slides tab: preview, order and hidden slides
 │   ├── ThemePicker.tsx     # Theme dropdown
@@ -187,9 +206,9 @@ docs/                       # Logo and images used in this README
 
 ## Next steps
 
-- Edit slide text right in the preview (titles and highlights).
-- Filters by period and category.
-- More slide types, such as a two-column comparison and a detail table.
+- Save a report (settings, filters and text) to open again later.
+- Also export to PowerPoint (`.pptx`).
+- Interface in English and Spanish.
 
 ---
 

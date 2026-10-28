@@ -111,6 +111,15 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
               <ChartCanvas kind="line" report={R} look={look} label={`${R.aggLabel} por mês`} />
             </div>
           )}
+          {R.compare && (
+            <div className="card">
+              <h3>
+                {R.compare.nameA} e {R.compare.nameB} por {R.settings.cat}
+              </h3>
+              <p className="c-sub">Cada coluna no seu próprio eixo · {R.compare.labels.length} maiores grupos</p>
+              <ChartCanvas kind="compare" report={R} look={look} label={`${R.compare.nameA} e ${R.compare.nameB} por ${R.settings.cat}`} />
+            </div>
+          )}
           <div className="card">
             <h3>Destaques</h3>
             <p className="c-sub">Gerados automaticamente a partir dos dados</p>

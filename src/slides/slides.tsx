@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { ChartCanvas } from '../components/ChartCanvas'
 import { Ring } from '../components/Ring'
 import type { ChartLook } from '../lib/charts'
@@ -9,13 +9,24 @@ import type { Theme } from '../themes'
 export const SLIDE_W = 1280
 export const SLIDE_H = 720
 
-export type SlideId = 'capa' | 'indicadores' | 'participacao' | 'barras' | 'distribuicao' | 'evolucao' | 'destaques' | 'ranking'
+export type SlideId = 'capa' | 'indicadores' | 'participacao' | 'barras' | 'distribuicao' | 'evolucao' | 'comparacao' | 'destaques' | 'ranking' | 'detalhes'
+
+/** Textos que a pessoa reescreveu na prévia. Títulos por slide; destaques pela posição. */
+export interface TextEdits {
+  titles: Partial<Record<SlideId, string>>
+  insights: Record<number, string>
+}
+export type TextEdit = { kind: 'title'; slide: SlideId; text: string } | { kind: 'insight'; index: number; text: string }
 
 export interface SlideProps {
   report: Report
   theme: Theme
   index: number
   total: number
+  slide?: SlideId
+  edits?: TextEdits
+  /** Só existe na prévia grande: é o que liga a edição de texto. */
+  onEdit?: (e: TextEdit) => void
 }
 
 interface SlideDef {
@@ -47,15 +58,53 @@ function slideLook(t: Theme): ChartLook {
   return { palette: t.palette, fg: t.slide.fg, muted: t.slide.muted, line: t.slide.line, surface: t.slide.bg, font: t.body, fontSize: 17, animate: false }
 }
 
-function Frame({ report, index, total, kicker, title, children }: SlideProps & { kicker: string; title: string; children: ReactNode }) {
+/**
+ * Texto que vira editável na prévia grande. Enter confirma; apagar tudo volta ao texto automático.
+ * O conteúdo é escrito pelo próprio DOM durante a edição, por isso o React só o define ao montar ou quando o valor muda.
+ */
+function Editable({ value, onChange, multiline, className, as: Tag = 'span' }: { value: string; onChange?: (text: string) => void; multiline?: boolean; className?: string; as?: 'span' | 'h1' | 'h2' }) {
+  const ref = useRef<HTMLElement>(null)
+  useLayoutEffect(() => {
+    if (ref.current && ref.current.textContent !== value) ref.current.textContent = value
+  }, [value])
+  if (!onChange) return <Tag className={className}>{value}</Tag>
+  return (
+    <Tag
+      ref={ref as never}
+      className={`${className ?? ''} editable`}
+      contentEditable="plaintext-only"
+      suppressContentEditableWarning
+      spellCheck
+      title="Clique para editar"
+      onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
+        if (e.key === 'Enter' && !(multiline && e.shiftKey)) {
+          e.preventDefault()
+          e.currentTarget.blur()
+        }
+        if (e.key === 'Escape') {
+          e.currentTarget.textContent = value
+          e.currentTarget.blur()
+        }
+      }}
+      onBlur={(e: React.FocusEvent<HTMLElement>) => {
+        const text = (e.currentTarget.textContent ?? '').replace(/\s+/g, ' ').trim()
+        if (text !== value) onChange(text)
+      }}
+    />
+  )
+}
+
+function Frame({ report, index, total, kicker, title, children, slide, edits, onEdit }: SlideProps & { kicker: string; title: string; children: ReactNode }) {
+  const shown = (slide && edits?.titles[slide]) || title
   return (
     <div className="slide-inner">
       <div className="s-kicker">{kicker}</div>
-      <h2 className="s-title">{title}</h2>
+      <Editable as="h2" className="s-title" value={shown} onChange={onEdit && slide ? (text) => onEdit({ kind: 'title', slide, text }) : undefined} />
       <div className="s-body">{children}</div>
       <div className="s-foot">
         <span>
           {report.settings.title} · {report.fileName}
+          {report.filterLabel && ` · ${report.filterLabel}`}
         </span>
         <span>{index ? `${index} / ${total}` : 'oculto'}</span>
       </div>
@@ -63,7 +112,7 @@ function Frame({ report, index, total, kicker, title, children }: SlideProps & {
   )
 }
 
-function Cover({ report, theme }: SlideProps) {
+function Cover({ report, theme, onEdit }: SlideProps) {
   const s = theme.slide
   return (
     <div className="slide-inner cover">
@@ -73,9 +122,15 @@ function Cover({ report, theme }: SlideProps) {
         <path d="M210 30 400 400H210Z" fill={s.coverBg} opacity="0.18" />
       </svg>
       <div className="s-kicker cover-kicker">Prisma Reports</div>
-      <h1 className="cover-title">{report.settings.title}</h1>
+      <Editable as="h1" className="cover-title" value={report.settings.title} onChange={onEdit ? (text) => onEdit({ kind: 'title', slide: 'capa', text }) : undefined} />
       <p className="cover-meta">
         {report.fileName} · {int(report.rowCount)} linhas · {today()}
+        {report.filterLabel && (
+          <>
+            <br />
+            Filtro: {report.filterLabel}
+          </>
+        )}
       </p>
     </div>
   )
@@ -159,7 +214,7 @@ function Highlights(p: SlideProps) {
         {p.report.insights.map((t, i) => (
           <li key={i}>
             <span className="dot" style={{ background: p.theme.palette[i % 6] }} />
-            <span>{t.text}</span>
+            <Editable value={t.text} multiline onChange={p.onEdit ? (text) => p.onEdit!({ kind: 'insight', index: i, text }) : undefined} />
           </li>
         ))}
       </ul>
@@ -203,6 +258,46 @@ function Ranking(p: SlideProps) {
   )
 }
 
+function Compare(p: SlideProps) {
+  const C = p.report.compare!
+  return (
+    <Frame {...p} kicker="Comparação" title={`${C.nameA} e ${C.nameB} por ${p.report.settings.cat}`}>
+      <ChartCanvas kind="compare" report={p.report} look={slideLook(p.theme)} label={`${C.nameA} e ${C.nameB} por ${p.report.settings.cat}`} />
+    </Frame>
+  )
+}
+
+function Details(p: SlideProps) {
+  const D = p.report.details!
+  return (
+    <Frame {...p} kicker="Detalhes" title={p.report.settings.val ? `Maiores registros por ${p.report.settings.val}` : 'Primeiros registros'}>
+      <table className="s-rank s-details">
+        <thead>
+          <tr>
+            {D.columns.map((c) => (
+              <th key={c.name} className={c.type === 'number' ? 'r' : undefined}>
+                {c.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {D.rows.map((r, i) => (
+            <tr key={i}>
+              {r.map((v, j) => (
+                <td key={j} className={D.columns[j].type === 'number' ? 'r' : undefined}>
+                  {v}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {p.report.rowCount > 10 && <p className="s-note">10 de {int(p.report.rowCount)} linhas</p>}
+    </Frame>
+  )
+}
+
 export const SLIDES: SlideDef[] = [
   { id: 'capa', name: 'Capa', available: () => true, Component: Cover },
   { id: 'indicadores', name: 'Indicadores', available: () => true, Component: Kpis },
@@ -210,8 +305,10 @@ export const SLIDES: SlideDef[] = [
   { id: 'barras', name: 'Barras', available: (R) => R.groups.length > 0, Component: Bars },
   { id: 'distribuicao', name: 'Distribuição', available: (R) => R.groups.length > 0, Component: Pie },
   { id: 'evolucao', name: 'Evolução', available: (R) => !!R.series, Component: Trend },
+  { id: 'comparacao', name: 'Comparação', available: (R) => !!R.compare, Component: Compare },
   { id: 'destaques', name: 'Destaques', available: (R) => R.insights.length > 0, Component: Highlights },
   { id: 'ranking', name: 'Ranking', available: (R) => R.groups.length > 0, Component: Ranking },
+  { id: 'detalhes', name: 'Detalhes', available: (R) => !!R.details, Component: Details },
 ]
 
 export const slideDef = (id: SlideId) => SLIDES.find((s) => s.id === id)!
@@ -221,7 +318,7 @@ export function Slide({ id, ...p }: SlideProps & { id: SlideId }) {
   const { Component } = slideDef(id)
   return (
     <div className="slide" style={slideVars(p.theme)} data-slide={id}>
-      <Component {...p} />
+      <Component {...p} slide={id} />
     </div>
   )
 }

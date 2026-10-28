@@ -57,10 +57,18 @@ Todo funciona en el navegador. Los datos no se envían a ningún servidor.
 - **Editor de diapositivas:** vista previa de todas las diapositivas en la página, con la
   opción de cambiar el orden y ocultar diapositivas. Lo que ves en la vista previa es
   exactamente lo que va al PDF.
+- **Filtros:** limita el informe a un período (de un mes a otro, por la columna de fecha)
+  y a algunos valores de una categoría. Panel, diapositivas y PDF muestran solo las filas
+  filtradas e indican el filtro usado.
+- **Textos editables:** haz clic en el título de cualquier diapositiva o en un destacado,
+  en la vista previa, y reescríbelo. Borrar el texto vuelve al automático, y **Restaurar
+  textos automáticos** deshace todas las ediciones.
+- **Comparación entre dos columnas:** en **Comparar com** (comparar con), elige una segunda
+  columna numérica para ver ambas lado a lado por grupo, cada una en su propio eje.
 - **Tres temas:** Prisma, Executivo y Vibrante, cada uno con sus colores y fuentes,
   elegidos en una lista desplegable. El tema se aplica a la página, las diapositivas y el PDF.
 - **Diapositivas en PDF:** presentación 16:9 con portada, indicadores, participación,
-  barras, distribución, evolución mensual, destacados y ranking.
+  barras, distribución, evolución mensual, comparación, destacados, ranking y tabla de detalle.
 - **Modo claro y oscuro:** la página sigue la configuración del sistema.
 - **Responsivo:** funciona en computadora y en celular.
 
@@ -80,6 +88,12 @@ Por ahora, la interfaz está en portugués.
 | --- |
 | ![Portada del informe en los tres temas](docs/screenshots/temas-capas.png) |
 | ![Diapositiva de barras en los tres temas](docs/screenshots/temas-graficos.png) |
+
+### Filtros y edición de textos
+
+![Filtros por período y por producto](docs/screenshots/filtros.png)
+
+![Un destacado editado directamente en la vista previa](docs/screenshots/edicao.png)
 
 ### Panel
 
@@ -104,6 +118,10 @@ Por ahora, la interfaz está en portugués.
 | Destacados | Ranking |
 | --- | --- |
 | ![Diapositiva de destacados](docs/screenshots/slide-destaques.png) | ![Diapositiva de ranking](docs/screenshots/slide-ranking.png) |
+
+| Comparación entre dos columnas | Detalles |
+| --- | --- |
+| ![Diapositiva que compara ingresos y cantidad](docs/screenshots/slide-comparacao.png) | ![Diapositiva con tabla de detalle](docs/screenshots/slide-detalhes.png) |
 
 ### Celular
 
@@ -165,7 +183,8 @@ src/
 ├── styles.css              # Estilos de la página y de las diapositivas
 ├── components/
 │   ├── Uploader.tsx        # Área para soltar o elegir la hoja
-│   ├── Controls.tsx        # Título, hoja, agrupación, valor, cálculo y línea de tiempo
+│   ├── Controls.tsx        # Título, hoja, agrupación, valor, comparación y línea de tiempo
+│   ├── FiltersBar.tsx      # Filtros por período y por categoría
 │   ├── Dashboard.tsx       # Pestaña Panel
 │   ├── SlideEditor.tsx     # Pestaña Slides: vista previa, orden y diapositivas ocultas
 │   ├── ThemePicker.tsx     # Lista desplegable de temas
@@ -188,9 +207,9 @@ docs/                       # Logo e imágenes usadas en este README
 
 ## Próximos pasos
 
-- Editar los textos de las diapositivas directamente en la vista previa (títulos y destacados).
-- Filtros por período y por categoría.
-- Más tipos de diapositiva, como comparación entre dos columnas y tabla de detalle.
+- Guardar un informe (configuración, filtros y textos) para abrirlo de nuevo después.
+- Exportar también a PowerPoint (`.pptx`).
+- Interfaz en inglés y español.
 
 ---
 

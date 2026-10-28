@@ -1,5 +1,5 @@
 import type { Report } from '../lib/report'
-import { slideDef, type SlideId } from '../slides/slides'
+import { slideDef, type SlideId, type TextEdit, type TextEdits } from '../slides/slides'
 import type { Theme } from '../themes'
 import { ScaledSlide } from './ScaledSlide'
 
@@ -15,6 +15,9 @@ interface Props {
   onDeck: (d: DeckItem[]) => void
   selected: SlideId
   onSelect: (id: SlideId) => void
+  edits: TextEdits
+  onEdit: (e: TextEdit) => void
+  onResetEdits: () => void
 }
 
 /** Slides que entram no PDF, na ordem do deck, sem os ocultos e sem os que não se aplicam aos dados. */
@@ -22,7 +25,7 @@ export function visibleSlides(deck: DeckItem[], R: Report) {
   return deck.filter((d) => !d.hidden && slideDef(d.id).available(R)).map((d) => d.id)
 }
 
-export function SlideEditor({ report, theme, deck, onDeck, selected, onSelect }: Props) {
+export function SlideEditor({ report, theme, deck, onDeck, selected, onSelect, edits, onEdit, onResetEdits }: Props) {
   const usable = deck.filter((d) => slideDef(d.id).available(report))
   const visible = visibleSlides(deck, report)
   const total = visible.length
@@ -50,7 +53,7 @@ export function SlideEditor({ report, theme, deck, onDeck, selected, onSelect }:
           <li key={d.id} className={`thumb${d.id === current?.id ? ' selected' : ''}${d.hidden ? ' is-hidden' : ''}`}>
             <button type="button" className="thumb-view" onClick={() => onSelect(d.id)} aria-label={`Ver slide ${slideDef(d.id).name}`} aria-current={d.id === current?.id}>
               <span className="thumb-no">{d.hidden ? '–' : numberOf(d.id)}</span>
-              <ScaledSlide id={d.id} report={report} theme={theme} index={d.hidden ? 0 : numberOf(d.id)} total={total} />
+              <ScaledSlide id={d.id} report={report} theme={theme} edits={edits} index={d.hidden ? 0 : numberOf(d.id)} total={total} />
             </button>
             <div className="thumb-bar">
               <span className="thumb-name">
@@ -87,11 +90,16 @@ export function SlideEditor({ report, theme, deck, onDeck, selected, onSelect }:
       </ol>
       {current && (
         <div className="stage">
-          <ScaledSlide id={current.id} report={report} theme={theme} index={currentNo} total={total} />
+          <ScaledSlide id={current.id} report={report} theme={theme} edits={edits} onEdit={onEdit} index={currentNo} total={total} interactive />
           <p className="stage-note">
             {current.hidden
               ? 'Este slide está oculto e não entra no PDF.'
-              : `Slide ${currentNo} de ${total}. Use as setas para mudar a ordem e o olho para ocultar um slide.`}
+              : `Slide ${currentNo} de ${total}. Clique no título ou nos destaques para editar o texto. Use as setas para mudar a ordem e o olho para ocultar um slide.`}
+            {(Object.keys(edits.titles).length > 0 || Object.keys(edits.insights).length > 0) && (
+              <button type="button" className="link" onClick={onResetEdits}>
+                Restaurar textos automáticos
+              </button>
+            )}
           </p>
         </div>
       )}

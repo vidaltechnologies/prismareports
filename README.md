@@ -54,10 +54,18 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
   soma, média ou contagem. Painel e slides se atualizam na hora.
 - **Editor de slides:** prévia de todos os slides na página, com a opção de mudar a ordem
   e ocultar slides. O que aparece na prévia é exatamente o que vai para o PDF.
+- **Filtros:** limite o relatório a um período (de um mês a outro, pela coluna de data) e
+  a alguns valores de uma categoria. Painel, slides e PDF mostram só as linhas filtradas e
+  indicam o filtro usado.
+- **Textos editáveis:** clique no título de qualquer slide ou num destaque, na prévia, e
+  reescreva. Apagar o texto volta ao automático, e **Restaurar textos automáticos** desfaz
+  todas as edições.
+- **Comparação entre duas colunas:** em **Comparar com**, escolha uma segunda coluna
+  numérica para ver as duas lado a lado por grupo, cada uma no seu eixo.
 - **Três temas:** Prisma, Executivo e Vibrante, cada um com suas cores e fontes, escolhidos
   numa lista suspensa. O tema vale para a página, os slides e o PDF.
 - **Slides em PDF:** apresentação 16:9 com capa, indicadores, participação, barras,
-  distribuição, evolução por mês, destaques e ranking.
+  distribuição, evolução por mês, comparação, destaques, ranking e tabela de detalhes.
 - **Tema claro e escuro:** a página segue o tema do sistema.
 - **Responsivo:** funciona no computador e no celular.
 
@@ -75,6 +83,12 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 | --- |
 | ![Capa do relatório nos três temas](docs/screenshots/temas-capas.png) |
 | ![Slide de barras nos três temas](docs/screenshots/temas-graficos.png) |
+
+### Filtros e edição de textos
+
+![Filtros por período e por produto](docs/screenshots/filtros.png)
+
+![Destaque sendo editado direto na prévia do slide](docs/screenshots/edicao.png)
 
 ### Painel
 
@@ -99,6 +113,10 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 | Destaques | Ranking |
 | --- | --- |
 | ![Slide de destaques](docs/screenshots/slide-destaques.png) | ![Slide de ranking](docs/screenshots/slide-ranking.png) |
+
+| Comparação entre duas colunas | Detalhes |
+| --- | --- |
+| ![Slide de comparação entre receita e quantidade](docs/screenshots/slide-comparacao.png) | ![Slide com tabela de detalhes](docs/screenshots/slide-detalhes.png) |
 
 ### Celular
 
@@ -160,7 +178,8 @@ src/
 ├── styles.css              # Estilos da página e dos slides
 ├── components/
 │   ├── Uploader.tsx        # Área para soltar ou escolher a planilha
-│   ├── Controls.tsx        # Título, aba, agrupamento, valor, cálculo e linha do tempo
+│   ├── Controls.tsx        # Título, aba, agrupamento, valor, comparação e linha do tempo
+│   ├── FiltersBar.tsx      # Filtros por período e por categoria
 │   ├── Dashboard.tsx       # Aba Painel
 │   ├── SlideEditor.tsx     # Aba Slides: prévia, ordem e slides ocultos
 │   ├── ThemePicker.tsx     # Lista suspensa de temas
@@ -183,9 +202,9 @@ docs/                       # Logo e imagens usadas neste README
 
 ## Próximos passos
 
-- Editar textos dos slides direto na prévia (títulos e destaques).
-- Filtros por período e por categoria.
-- Mais tipos de slide, como comparação entre duas colunas e tabela de detalhes.
+- Salvar um relatório (configurações, filtros e textos) para abrir de novo depois.
+- Exportar também em PowerPoint (`.pptx`).
+- Interface em inglês e espanhol.
 
 ---
 
