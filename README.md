@@ -66,6 +66,12 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
   O botão **Baixar slides** oferece os dois formatos. No `.pptx`, títulos, textos, gráficos e
   tabelas são elementos nativos do PowerPoint: dá para editar o texto, mudar cores e abrir os
   dados de cada gráfico no PowerPoint, no Keynote ou no Google Apresentações.
+- **Templates:** em **Template → Salvar template**, as escolhas do relatório vão para um arquivo
+  `.prisma.json`: colunas, cálculo, tema, filtro de categoria, ordem e slides ocultos e títulos
+  editados. No mês seguinte, abra a planilha nova e use **Template → Abrir template** para
+  refazer o mesmo relatório com os números novos. A planilha nunca entra no arquivo, e o
+  período e os destaques reescritos ficam de fora, porque mudam a cada mês. Se faltar alguma
+  coluna na planilha nova, a página avisa e usa a escolha automática.
 - **Português, inglês e espanhol:** as bandeiras no canto superior direito trocam o idioma
   da página, dos slides, dos destaques e do formato dos números e datas. Os dados de exemplo
   também mudam de idioma, com os nomes das colunas e dos valores traduzidos. A escolha fica
@@ -101,6 +107,10 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 | Painel em espanhol | Download em PDF ou PowerPoint |
 | --- | --- |
 | ![Painel em espanhol, com números no formato espanhol](docs/screenshots/idioma-espanhol.png) | ![Menu Baixar slides com as opções PDF e PowerPoint](docs/screenshots/download.png) |
+
+### Templates
+
+![Menu Template com as opções Salvar template e Abrir template](docs/screenshots/template.png)
 
 ### PowerPoint editável
 
@@ -202,7 +212,7 @@ src/
 │   ├── SlideEditor.tsx     # Aba Slides: prévia, ordem e slides ocultos
 │   ├── ThemePicker.tsx     # Lista suspensa de temas
 │   ├── LanguageSwitcher.tsx # Bandeiras para trocar o idioma
-│   ├── ExportMenu.tsx      # Botão Baixar slides, com PDF e PowerPoint
+│   ├── MenuButton.tsx      # Botões com menu: Template e Baixar slides
 │   ├── ScaledSlide.tsx     # Slide de 1280×720 encolhido para caber na tela
 │   ├── ExportStage.tsx     # Renderiza os slides em tamanho real para o PDF
 │   ├── ChartCanvas.tsx     # Gráfico do Chart.js como componente
@@ -215,15 +225,12 @@ src/
     ├── charts.ts           # Configuração dos gráficos
     ├── exportSlides.ts     # Captura dos slides, geração do PDF e download
     ├── pptx.ts             # PowerPoint com elementos nativos, slide a slide
+    ├── template.ts         # Salvar, validar e aplicar templates (.prisma.json)
     ├── format.ts           # Números, percentuais e datas no idioma escolhido
     └── sample.ts           # Dados de exemplo, nos três idiomas
 exemplos/                   # Planilha de teste
 docs/                       # Logo e imagens usadas neste README
 ```
-
-## Próximos passos
-
-- Salvar um relatório (configurações, filtros e textos) para abrir de novo depois.
 
 ---
 
