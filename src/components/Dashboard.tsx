@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import type { ChartLook } from '../lib/charts'
-import { compact, fmt, int, pct } from '../lib/format'
-import { isEmpty, parseDate, parseNum, type Column, type Dataset } from '../lib/parse'
+import { t } from '../i18n'
+import { compact, dateLabel, fmt, int, pct } from '../lib/format'
+import { isEmpty, parseDate, parseNum, type Dataset } from '../lib/parse'
 import { topWithOthers, type Report } from '../lib/report'
 import type { Theme } from '../themes'
 import { ChartCanvas } from './ChartCanvas'
@@ -31,8 +32,6 @@ export function uiPalette(theme: Theme, dark: boolean) {
   })
 }
 
-const TYPE_NAME: Record<Column['type'], string> = { number: 'número', date: 'data', category: 'categoria', text: 'texto' }
-
 export function Dashboard({ ds, report: R, theme, dark }: Props) {
   const palette = uiPalette(theme, dark)
   const css = getComputedStyle(document.documentElement)
@@ -51,12 +50,13 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [theme, dark],
   )
+  const T = t()
   const kpis = [
-    { l: 'Linhas analisadas', v: int(R.rowCount), f: `${R.colCount} colunas` },
-    R.hasValue ? { l: `Total de ${R.settings.val}`, v: compact(R.total), f: fmt(R.total) } : null,
-    R.hasValue ? { l: `Média de ${R.settings.val}`, v: compact(R.avg), f: `mín ${compact(R.min)} · máx ${compact(R.max)}` } : null,
-    { l: `Grupos em ${R.settings.cat}`, v: int(R.groups.length), f: 'valores distintos' },
-    R.groups[0] ? { l: 'Maior grupo', v: R.groups[0].label, f: `${compact(R.groups[0].value)} · ${pct(R.groups[0].share)}` } : null,
+    { l: T.rowsAnalyzed, v: int(R.rowCount), f: T.columns(R.colCount) },
+    R.hasValue ? { l: T.totalOf(R.settings.val), v: compact(R.total), f: fmt(R.total) } : null,
+    R.hasValue ? { l: T.avgOf(R.settings.val), v: compact(R.avg), f: T.minMax(compact(R.min), compact(R.max)) } : null,
+    { l: T.groupsIn(R.settings.cat), v: int(R.groups.length), f: T.distinctValues },
+    R.groups[0] ? { l: T.topGroup, v: R.groups[0].label, f: `${compact(R.groups[0].value)} · ${pct(R.groups[0].share)}` } : null,
   ].filter((x): x is { l: string; v: string; f: string } => !!x)
   const rings = topWithOthers(R.groups, 5).slice(0, 5)
   const preview = ds.rows.slice(0, 50)
@@ -64,7 +64,7 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
   return (
     <>
       <section aria-labelledby="hKpi">
-        <h2 id="hKpi">Indicadores</h2>
+        <h2 id="hKpi">{T.kpis}</h2>
         <div className="kpis">
           {kpis.map((k) => (
             <div className="kpi" key={k.l}>
@@ -77,7 +77,7 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
       </section>
 
       <section aria-labelledby="hRings">
-        <h2 id="hRings">Participação por {R.settings.cat}</h2>
+        <h2 id="hRings">{T.shareBy(R.settings.cat)}</h2>
         <div className="rings">
           {rings.map((g, i) => (
             <div className="ring" key={g.label}>
@@ -90,50 +90,46 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
       </section>
 
       <section aria-labelledby="hCharts">
-        <h2 id="hCharts">Gráficos</h2>
+        <h2 id="hCharts">{T.charts}</h2>
         <div className="charts">
           <div className="card">
-            <h3>
-              {R.aggLabel} por {R.settings.cat}
-            </h3>
-            <p className="c-sub">{R.groups.length > 12 ? `12 maiores de ${R.groups.length} grupos` : `${R.groups.length} grupos`}</p>
-            <ChartCanvas kind="bar" report={R} look={look} label={`${R.aggLabel} por ${R.settings.cat}`} />
+            <h3>{T.aBy(R.aggLabel, R.settings.cat)}</h3>
+            <p className="c-sub">{R.groups.length > 12 ? T.topNOf(12, R.groups.length) : T.nGroups(R.groups.length)}</p>
+            <ChartCanvas kind="bar" report={R} look={look} label={T.aBy(R.aggLabel, R.settings.cat)} />
           </div>
           <div className="card">
-            <h3>Distribuição por {R.settings.cat}</h3>
-            <p className="c-sub">{R.settings.agg === 'count' ? 'Percentual de linhas' : `Percentual do total de ${R.settings.val}`}</p>
-            <ChartCanvas kind="pie" report={R} look={look} label={`Distribuição por ${R.settings.cat}`} />
+            <h3>{T.distributionBy(R.settings.cat)}</h3>
+            <p className="c-sub">{R.settings.agg === 'count' ? T.pctOfRows : T.pctOfTotal(R.settings.val)}</p>
+            <ChartCanvas kind="pie" report={R} look={look} label={T.distributionBy(R.settings.cat)} />
           </div>
           {R.series && (
             <div className="card">
-              <h3>{R.aggLabel} por mês</h3>
-              <p className="c-sub">Com base em {R.settings.date}</p>
-              <ChartCanvas kind="line" report={R} look={look} label={`${R.aggLabel} por mês`} />
+              <h3>{T.perMonth(R.aggLabel)}</h3>
+              <p className="c-sub">{T.basedOn(R.settings.date)}</p>
+              <ChartCanvas kind="line" report={R} look={look} label={T.perMonth(R.aggLabel)} />
             </div>
           )}
           {R.compare && (
             <div className="card">
-              <h3>
-                {R.compare.nameA} e {R.compare.nameB} por {R.settings.cat}
-              </h3>
-              <p className="c-sub">Cada coluna no seu próprio eixo · {R.compare.labels.length} maiores grupos</p>
-              <ChartCanvas kind="compare" report={R} look={look} label={`${R.compare.nameA} e ${R.compare.nameB} por ${R.settings.cat}`} />
+              <h3>{T.compareTitle(R.compare.nameA, R.compare.nameB, R.settings.cat)}</h3>
+              <p className="c-sub">{T.compareSub(R.compare.labels.length)}</p>
+              <ChartCanvas kind="compare" report={R} look={look} label={T.compareTitle(R.compare.nameA, R.compare.nameB, R.settings.cat)} />
             </div>
           )}
           <div className="card">
-            <h3>Destaques</h3>
-            <p className="c-sub">Gerados automaticamente a partir dos dados</p>
+            <h3>{T.highlights}</h3>
+            <p className="c-sub">{T.highlightsSub}</p>
             <ul className="insights">
-              {R.insights.map((t, i) => (
+              {R.insights.map((ins, i) => (
                 <li key={i}>
-                  {t.strong ? (
+                  {ins.strong ? (
                     <>
-                      {t.text.split(t.strong)[0]}
-                      <b>{t.strong}</b>
-                      {t.text.split(t.strong).slice(1).join(t.strong)}
+                      {ins.text.split(ins.strong)[0]}
+                      <b>{ins.strong}</b>
+                      {ins.text.split(ins.strong).slice(1).join(ins.strong)}
                     </>
                   ) : (
-                    t.text
+                    ins.text
                   )}
                 </li>
               ))}
@@ -143,7 +139,7 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
       </section>
 
       <section aria-labelledby="hTable">
-        <h2 id="hTable">Dados</h2>
+        <h2 id="hTable">{T.data}</h2>
         <div className="table-wrap">
           <table>
             <thead>
@@ -151,7 +147,7 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
                 {ds.columns.map((c) => (
                   <th key={c.name}>
                     {c.name}
-                    <span className={`badge ${c.type}`}>{TYPE_NAME[c.type]}</span>
+                    <span className={`badge ${c.type}`}>{T.types[c.type]}</span>
                   </th>
                 ))}
               </tr>
@@ -164,7 +160,7 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
                     if (isEmpty(v)) return <td key={c.name} />
                     if (c.type === 'date') {
                       const d = parseDate(v)
-                      return <td key={c.name}>{d ? d.toLocaleDateString('pt-BR') : String(v)}</td>
+                      return <td key={c.name}>{d ? dateLabel(d) : String(v)}</td>
                     }
                     if (c.type === 'number') {
                       const n = parseNum(v)
@@ -181,7 +177,7 @@ export function Dashboard({ ds, report: R, theme, dark }: Props) {
             </tbody>
           </table>
         </div>
-        <p className="table-foot">{ds.rows.length > 50 ? `Mostrando 50 de ${ds.rows.length} linhas.` : `${ds.rows.length} linhas.`}</p>
+        <p className="table-foot">{ds.rows.length > 50 ? T.showingRows(50, ds.rows.length) : `${T.rowsLabel(int(ds.rows.length))}.`}</p>
       </section>
     </>
   )

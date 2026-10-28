@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useMemo } from 'react'
 import { int, monthLabel } from '../lib/format'
 import type { Dataset } from '../lib/parse'
@@ -14,6 +15,7 @@ interface Props {
 const MAX_CHIPS = 40
 
 export function FiltersBar({ ds, settings, filters, shown, onChange }: Props) {
+  const T = t()
   const months = useMemo(() => monthsOf(ds, settings.date), [ds, settings.date])
   const cats = ds.columns.filter((c) => c.type === 'category')
   const values = useMemo(() => (filters.col ? valuesOf(ds, filters.col) : []), [ds, filters.col])
@@ -24,21 +26,21 @@ export function FiltersBar({ ds, settings, filters, shown, onChange }: Props) {
   return (
     <section className="filters" aria-labelledby="hFilters">
       <div className="filters-head">
-        <h2 id="hFilters">Filtros</h2>
+        <h2 id="hFilters">{T.filters}</h2>
         <span className={`filters-count${shown === 0 ? ' empty' : ''}`}>
-          {shown === 0 ? 'Nenhuma linha com esses filtros' : active ? `${int(shown)} de ${int(ds.rows.length)} linhas` : `Todas as ${int(ds.rows.length)} linhas`}
+          {shown === 0 ? T.noRowsFiltered : active ? T.rowsOf(int(shown), int(ds.rows.length)) : T.allRows(int(ds.rows.length))}
         </span>
         {active && (
           <button type="button" className="link" onClick={() => onChange({ ...NO_FILTERS, col: filters.col })}>
-            Limpar filtros
+            {T.clearFilters}
           </button>
         )}
       </div>
       <div className="controls">
         <label htmlFor="fromSel">
-          Período de
+          {T.periodFrom}
           <select id="fromSel" value={filters.from} disabled={!months.length} onChange={(e) => set({ from: e.target.value, to: filters.to && e.target.value > filters.to ? e.target.value : filters.to })}>
-            <option value="">{months.length ? 'Início' : 'Sem linha do tempo'}</option>
+            <option value="">{months.length ? T.start : T.noTimeline}</option>
             {months.map((m) => (
               <option key={m} value={m}>
                 {monthLabel(m)}
@@ -47,9 +49,9 @@ export function FiltersBar({ ds, settings, filters, shown, onChange }: Props) {
           </select>
         </label>
         <label htmlFor="toSel">
-          até
+          {T.periodTo}
           <select id="toSel" value={filters.to} disabled={!months.length} onChange={(e) => set({ to: e.target.value, from: filters.from && e.target.value && e.target.value < filters.from ? e.target.value : filters.from })}>
-            <option value="">{months.length ? 'Fim' : 'Sem linha do tempo'}</option>
+            <option value="">{months.length ? T.end : T.noTimeline}</option>
             {months.map((m) => (
               <option key={m} value={m}>
                 {monthLabel(m)}
@@ -58,9 +60,9 @@ export function FiltersBar({ ds, settings, filters, shown, onChange }: Props) {
           </select>
         </label>
         <label htmlFor="filterCol">
-          Filtrar categoria
+          {T.filterCategory}
           <select id="filterCol" value={filters.col} disabled={!cats.length} onChange={(e) => set({ col: e.target.value, values: [] })}>
-            <option value="">Nenhuma</option>
+            <option value="">{T.none}</option>
             {cats.map((c) => (
               <option key={c.name}>{c.name}</option>
             ))}
@@ -68,15 +70,15 @@ export function FiltersBar({ ds, settings, filters, shown, onChange }: Props) {
         </label>
       </div>
       {filters.col && (
-        <div className="chips" role="group" aria-label={`Valores de ${filters.col}`}>
+        <div className="chips" role="group" aria-label={T.valuesOf(filters.col)}>
           {values.slice(0, MAX_CHIPS).map(({ value, count }) => (
             <button type="button" key={value} className="chip" aria-pressed={filters.values.includes(value)} onClick={() => toggle(value)}>
               {value}
               <small>{int(count)}</small>
             </button>
           ))}
-          {values.length > MAX_CHIPS && <span className="chips-more">e mais {values.length - MAX_CHIPS} valores</span>}
-          <span className="chips-hint">{filters.values.length ? 'Só os valores marcados entram no relatório.' : 'Nenhum marcado: entram todos.'}</span>
+          {values.length > MAX_CHIPS && <span className="chips-more">{T.moreValues(values.length - MAX_CHIPS)}</span>}
+          <span className="chips-hint">{filters.values.length ? T.onlyMarked : T.noneMarked}</span>
         </div>
       )}
     </section>

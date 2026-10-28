@@ -4,6 +4,7 @@ import { Ring } from '../components/Ring'
 import type { ChartLook } from '../lib/charts'
 import { compact, fmt, int, pct, today } from '../lib/format'
 import { topWithOthers, type Report } from '../lib/report'
+import { t } from '../i18n'
 import type { Theme } from '../themes'
 
 export const SLIDE_W = 1280
@@ -31,7 +32,6 @@ export interface SlideProps {
 
 interface SlideDef {
   id: SlideId
-  name: string
   available: (R: Report) => boolean
   Component: (p: SlideProps) => ReactNode
 }
@@ -75,7 +75,7 @@ function Editable({ value, onChange, multiline, className, as: Tag = 'span' }: {
       contentEditable="plaintext-only"
       suppressContentEditableWarning
       spellCheck
-      title="Clique para editar"
+      title={t().clickToEdit}
       onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
         if (e.key === 'Enter' && !(multiline && e.shiftKey)) {
           e.preventDefault()
@@ -106,7 +106,7 @@ function Frame({ report, index, total, kicker, title, children, slide, edits, on
           {report.settings.title} · {report.fileName}
           {report.filterLabel && ` · ${report.filterLabel}`}
         </span>
-        <span>{index ? `${index} / ${total}` : 'oculto'}</span>
+        <span>{index ? `${index} / ${total}` : t().hidden}</span>
       </div>
     </div>
   )
@@ -124,11 +124,11 @@ function Cover({ report, theme, onEdit }: SlideProps) {
       <div className="s-kicker cover-kicker">Prisma Reports</div>
       <Editable as="h1" className="cover-title" value={report.settings.title} onChange={onEdit ? (text) => onEdit({ kind: 'title', slide: 'capa', text }) : undefined} />
       <p className="cover-meta">
-        {report.fileName} · {int(report.rowCount)} linhas · {today()}
+        {report.fileName} · {t().rowsLabel(int(report.rowCount))} · {today()}
         {report.filterLabel && (
           <>
             <br />
-            Filtro: {report.filterLabel}
+            {t().filterNote(report.filterLabel)}
           </>
         )}
       </p>
@@ -138,15 +138,16 @@ function Cover({ report, theme, onEdit }: SlideProps) {
 
 function Kpis(p: SlideProps) {
   const R = p.report
+  const T = t()
   const items = [
-    { l: 'Linhas analisadas', v: int(R.rowCount), f: `${R.colCount} colunas` },
-    R.hasValue ? { l: `Total de ${R.settings.val}`, v: compact(R.total), f: fmt(R.total) } : null,
-    R.hasValue ? { l: `Média de ${R.settings.val}`, v: compact(R.avg), f: `mín ${compact(R.min)} · máx ${compact(R.max)}` } : null,
-    { l: `Grupos em ${R.settings.cat}`, v: int(R.groups.length), f: 'valores distintos' },
-    R.groups[0] ? { l: 'Maior grupo', v: R.groups[0].label, f: `${pct(R.groups[0].share)} do total` } : null,
+    { l: T.rowsAnalyzed, v: int(R.rowCount), f: T.columns(R.colCount) },
+    R.hasValue ? { l: T.totalOf(R.settings.val), v: compact(R.total), f: fmt(R.total) } : null,
+    R.hasValue ? { l: T.avgOf(R.settings.val), v: compact(R.avg), f: T.minMax(compact(R.min), compact(R.max)) } : null,
+    { l: T.groupsIn(R.settings.cat), v: int(R.groups.length), f: T.distinctValues },
+    R.groups[0] ? { l: T.topGroup, v: R.groups[0].label, f: T.ofTotal(pct(R.groups[0].share)) } : null,
   ].filter((x): x is { l: string; v: string; f: string } => !!x)
   return (
-    <Frame {...p} kicker="Visão geral" title="Indicadores principais">
+    <Frame {...p} kicker={T.kOverview} title={T.mainKpis}>
       <div className={`s-kpis n${items.length}`}>
         {items.map((k, i) => (
           <div className="s-kpi" key={k.l}>
@@ -166,7 +167,7 @@ function Shares(p: SlideProps) {
   const items = topWithOthers(p.report.groups, 5).slice(0, 5)
   const size = items.length > 4 ? 170 : 200
   return (
-    <Frame {...p} kicker="Participação" title={`Participação por ${p.report.settings.cat}`}>
+    <Frame {...p} kicker={t().kShare} title={t().shareBy(p.report.settings.cat)}>
       <div className="s-rings">
         {items.map((g, i) => (
           <div className="s-ring" key={g.label}>
@@ -183,8 +184,8 @@ function Shares(p: SlideProps) {
 function Bars(p: SlideProps) {
   const R = p.report
   return (
-    <Frame {...p} kicker="Comparativo" title={`${R.aggLabel} por ${R.settings.cat}`}>
-      <ChartCanvas kind="bar" report={R} look={slideLook(p.theme)} label={`${R.aggLabel} por ${R.settings.cat}`} />
+    <Frame {...p} kicker={t().kCompare} title={t().aBy(R.aggLabel, R.settings.cat)}>
+      <ChartCanvas kind="bar" report={R} look={slideLook(p.theme)} label={t().aBy(R.aggLabel, R.settings.cat)} />
     </Frame>
   )
 }
@@ -192,8 +193,8 @@ function Bars(p: SlideProps) {
 function Pie(p: SlideProps) {
   const R = p.report
   return (
-    <Frame {...p} kicker="Comparativo" title={`Distribuição por ${R.settings.cat}`}>
-      <ChartCanvas kind="pie" report={R} look={slideLook(p.theme)} label={`Distribuição por ${R.settings.cat}`} />
+    <Frame {...p} kicker={t().kCompare} title={t().distributionBy(R.settings.cat)}>
+      <ChartCanvas kind="pie" report={R} look={slideLook(p.theme)} label={t().distributionBy(R.settings.cat)} />
     </Frame>
   )
 }
@@ -201,15 +202,15 @@ function Pie(p: SlideProps) {
 function Trend(p: SlideProps) {
   const R = p.report
   return (
-    <Frame {...p} kicker="Evolução" title={`${R.aggLabel} por mês`}>
-      <ChartCanvas kind="line" report={R} look={slideLook(p.theme)} label={`${R.aggLabel} por mês`} />
+    <Frame {...p} kicker={t().kTrend} title={t().perMonth(R.aggLabel)}>
+      <ChartCanvas kind="line" report={R} look={slideLook(p.theme)} label={t().perMonth(R.aggLabel)} />
     </Frame>
   )
 }
 
 function Highlights(p: SlideProps) {
   return (
-    <Frame {...p} kicker="Leitura" title="Destaques">
+    <Frame {...p} kicker={t().kReading} title={t().highlights}>
       <ul className="s-insights">
         {p.report.insights.map((t, i) => (
           <li key={i}>
@@ -227,7 +228,7 @@ function Ranking(p: SlideProps) {
   const rows = R.groups.slice(0, 10)
   const maxShare = Math.max(...rows.map((r) => r.share), 0.0001)
   return (
-    <Frame {...p} kicker="Ranking" title={`Ranking por ${R.settings.cat}`}>
+    <Frame {...p} kicker={t().kRanking} title={t().rankingBy(R.settings.cat)}>
       <table className="s-rank">
         <thead>
           <tr>
@@ -235,7 +236,7 @@ function Ranking(p: SlideProps) {
             <th>{R.settings.cat}</th>
             <th className="r">{R.aggLabel}</th>
             <th className="r" colSpan={2}>
-              Participação
+              {t().share}
             </th>
           </tr>
         </thead>
@@ -253,7 +254,7 @@ function Ranking(p: SlideProps) {
           ))}
         </tbody>
       </table>
-      {R.groups.length > 10 && <p className="s-note">10 maiores de {R.groups.length} grupos</p>}
+      {R.groups.length > 10 && <p className="s-note">{t().topNGroups(R.groups.length)}</p>}
     </Frame>
   )
 }
@@ -261,8 +262,8 @@ function Ranking(p: SlideProps) {
 function Compare(p: SlideProps) {
   const C = p.report.compare!
   return (
-    <Frame {...p} kicker="Comparação" title={`${C.nameA} e ${C.nameB} por ${p.report.settings.cat}`}>
-      <ChartCanvas kind="compare" report={p.report} look={slideLook(p.theme)} label={`${C.nameA} e ${C.nameB} por ${p.report.settings.cat}`} />
+    <Frame {...p} kicker={t().kComparison} title={t().compareTitle(C.nameA, C.nameB, p.report.settings.cat)}>
+      <ChartCanvas kind="compare" report={p.report} look={slideLook(p.theme)} label={t().compareTitle(C.nameA, C.nameB, p.report.settings.cat)} />
     </Frame>
   )
 }
@@ -270,7 +271,7 @@ function Compare(p: SlideProps) {
 function Details(p: SlideProps) {
   const D = p.report.details!
   return (
-    <Frame {...p} kicker="Detalhes" title={p.report.settings.val ? `Maiores registros por ${p.report.settings.val}` : 'Primeiros registros'}>
+    <Frame {...p} kicker={t().kDetails} title={p.report.settings.val ? t().topRecords(p.report.settings.val) : t().firstRecords}>
       <table className="s-rank s-details">
         <thead>
           <tr>
@@ -293,23 +294,25 @@ function Details(p: SlideProps) {
           ))}
         </tbody>
       </table>
-      {p.report.rowCount > 10 && <p className="s-note">10 de {int(p.report.rowCount)} linhas</p>}
+      {p.report.rowCount > 10 && <p className="s-note">{t().nOfRows(int(p.report.rowCount))}</p>}
     </Frame>
   )
 }
 
 export const SLIDES: SlideDef[] = [
-  { id: 'capa', name: 'Capa', available: () => true, Component: Cover },
-  { id: 'indicadores', name: 'Indicadores', available: () => true, Component: Kpis },
-  { id: 'participacao', name: 'Participação', available: (R) => R.groups.length > 0, Component: Shares },
-  { id: 'barras', name: 'Barras', available: (R) => R.groups.length > 0, Component: Bars },
-  { id: 'distribuicao', name: 'Distribuição', available: (R) => R.groups.length > 0, Component: Pie },
-  { id: 'evolucao', name: 'Evolução', available: (R) => !!R.series, Component: Trend },
-  { id: 'comparacao', name: 'Comparação', available: (R) => !!R.compare, Component: Compare },
-  { id: 'destaques', name: 'Destaques', available: (R) => R.insights.length > 0, Component: Highlights },
-  { id: 'ranking', name: 'Ranking', available: (R) => R.groups.length > 0, Component: Ranking },
-  { id: 'detalhes', name: 'Detalhes', available: (R) => !!R.details, Component: Details },
+  { id: 'capa', available: () => true, Component: Cover },
+  { id: 'indicadores', available: () => true, Component: Kpis },
+  { id: 'participacao', available: (R) => R.groups.length > 0, Component: Shares },
+  { id: 'barras', available: (R) => R.groups.length > 0, Component: Bars },
+  { id: 'distribuicao', available: (R) => R.groups.length > 0, Component: Pie },
+  { id: 'evolucao', available: (R) => !!R.series, Component: Trend },
+  { id: 'comparacao', available: (R) => !!R.compare, Component: Compare },
+  { id: 'destaques', available: (R) => R.insights.length > 0, Component: Highlights },
+  { id: 'ranking', available: (R) => R.groups.length > 0, Component: Ranking },
+  { id: 'detalhes', available: (R) => !!R.details, Component: Details },
 ]
+
+export const slideName = (id: SlideId) => t().slideNames[id]
 
 export const slideDef = (id: SlideId) => SLIDES.find((s) => s.id === id)!
 

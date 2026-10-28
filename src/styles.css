@@ -242,3 +242,34 @@ button.link { border: 0; background: none; padding: 0; color: var(--accent); tex
 .s-details { font-size: 16px; }
 .s-details td { padding: 7px 12px 7px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
 .s-details th { padding-right: 12px; }
+
+/* Idiomas: bandeiras no canto superior direito, como no site da Vidal Technologies */
+.lang { display: flex; align-items: center; gap: 6px; }
+.lang .flag { display: block; width: 24px; height: 16px; padding: 0; border: 0; border-radius: 3px; overflow: hidden; background: none; opacity: 0.6; transition: opacity 0.15s, box-shadow 0.15s; }
+.lang .flag svg { display: block; width: 100%; height: 100%; }
+.lang .flag:hover { opacity: 1; }
+.lang .flag[aria-current='true'] { opacity: 1; box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+.lang .flag:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* Menu de download */
+.menu-wrap { position: relative; }
+.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; gap: 2px; padding: 6px; width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgb(0 0 0 / 0.16); }
+.menu [role='menuitem'] { width: 100%; border: 0; padding: 10px; gap: 12px; text-align: left; line-height: 1.25; background: none; }
+.menu [role='menuitem']:hover, .menu [role='menuitem']:focus-visible { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); outline: none; }
+.menu [role='menuitem'] > span:not(.file-badge) { display: grid; flex: 1; min-width: 0; }
+.menu b { font-weight: 600; }
+.menu small { color: var(--muted); font-size: 12px; font-weight: 400; }
+.menu .ext { font-family: var(--mono); }
+.file-badge { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; font: 700 11px/1 var(--mono); color: #fff; }
+.file-badge.pdf { background: #c7362b; }
+.file-badge.pptx { background: #c4502a; }
+
+@media (max-width: 560px) {
+  /* No celular o cabeçalho é alto demais para ficar preso no topo. */
+  header.bar { position: static; }
+  .lang { order: -1; margin-left: auto; }
+  .brand { order: -2; }
+  .menu-wrap { flex: 1; display: flex; }
+  .menu-wrap .export-btn { flex: 1; justify-content: center; white-space: nowrap; }
+  .menu { left: 0; right: auto; width: 100%; }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { t as tr } from '../i18n'
 import { THEMES, type Theme, type ThemeId } from '../themes'
 
 interface Props {
@@ -68,15 +69,15 @@ export function ThemePicker({ value, onChange }: Props) {
       >
         <Swatch t={value} />
         <span className="theme-btn-label">
-          <small>Tema</small>
-          {value.name}
+          <small>{tr().theme}</small>
+          {tr().themeNames[value.id]}
         </span>
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
       {open && (
-        <ul className="theme-list" role="listbox" id={listId} aria-label="Temas">
+        <ul className="theme-list" role="listbox" id={listId} aria-label={tr().themesLabel}>
           {THEMES.map((t, i) => (
             <li
               key={t.id}
@@ -89,8 +90,8 @@ export function ThemePicker({ value, onChange }: Props) {
             >
               <Swatch t={t} />
               <span>
-                <b style={{ fontFamily: t.display }}>{t.name}</b>
-                <small>{t.description}</small>
+                <b style={{ fontFamily: t.display }}>{tr().themeNames[t.id]}</b>
+                <small>{tr().themeDescriptions[t.id]}</small>
               </span>
               {t.id === value.id && (
                 <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" className="check">
