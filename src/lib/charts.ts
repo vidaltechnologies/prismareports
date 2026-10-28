@@ -19,7 +19,7 @@ import { topWithOthers, type Report } from './report'
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, DoughnutController, ArcElement, LineController, LineElement, PointElement, Filler, Legend, Tooltip)
 
-export type ChartKind = 'bar' | 'pie' | 'line'
+export type ChartKind = 'bar' | 'pie' | 'line' | 'compare'
 
 /** Cores e tipografia que um gráfico precisa; vêm do tema e do contexto (painel ou slide). */
 export interface ChartLook {
@@ -110,6 +110,32 @@ export function chartConfig(kind: ChartKind, R: Report, L: ChartLook): ChartConf
       },
     }
     return pie as unknown as ChartConfiguration
+  }
+
+  if (kind === 'compare') {
+    const C = R.compare
+    if (!C) return null
+    // Dois eixos: as colunas costumam ter escalas diferentes (ex.: receita e quantidade).
+    const legend = { display: true, position: 'top' as const, align: 'center' as const, labels: { color: L.fg, font, boxWidth: 14, padding: 16 } }
+    return {
+      type: 'bar',
+      data: {
+        labels: C.labels,
+        datasets: [
+          { label: C.nameA, data: C.a, backgroundColor: L.palette[0], borderRadius: 5, maxBarThickness: 40, yAxisID: 'y' },
+          { label: C.nameB, data: C.b, backgroundColor: L.palette[1], borderRadius: 5, maxBarThickness: 40, yAxisID: 'y1' },
+        ],
+      },
+      options: {
+        ...base,
+        plugins: { legend, tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${fmt(c.parsed.y)}` } } },
+        scales: {
+          x: axis,
+          y: { ...axis, position: 'left', ticks: { ...axis.ticks, color: L.palette[0], callback: (v) => compact(+v) } },
+          y1: { ...axis, position: 'right', grid: { drawOnChartArea: false }, ticks: { ...axis.ticks, color: L.palette[1], callback: (v) => compact(+v) } },
+        },
+      },
+    }
   }
 
   if (!R.series) return null

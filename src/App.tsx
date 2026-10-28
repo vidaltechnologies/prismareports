@@ -3,15 +3,16 @@ import type { WorkBook } from 'xlsx'
 import { Controls } from './components/Controls'
 import { Dashboard, uiPalette } from './components/Dashboard'
 import { ExportStage } from './components/ExportStage'
+import { FiltersBar } from './components/FiltersBar'
 import { SlideEditor, visibleSlides, type DeckItem } from './components/SlideEditor'
 import { ThemePicker } from './components/ThemePicker'
 import { Uploader } from './components/Uploader'
 import { saveBlob, slidesToPdf } from './lib/exportPdf'
 import { slug, today } from './lib/format'
 import { readWorkbook, sheetToDataset, type Dataset } from './lib/parse'
-import { buildReport, defaultSettings, type Settings } from './lib/report'
+import { applyFilters, buildReport, defaultSettings, NO_FILTERS, type Filters, type Settings } from './lib/report'
 import { sampleDataset } from './lib/sample'
-import { SLIDES, type SlideId } from './slides/slides'
+import { SLIDES, type SlideId, type TextEdit, type TextEdits } from './slides/slides'
 import { themeById, type ThemeId } from './themes'
 
 type View = 'painel' | 'slides'
@@ -56,6 +57,7 @@ function useDarkMode() {
 }
 
 const initialDeck = (): DeckItem[] => SLIDES.map((s) => ({ id: s.id, hidden: false }))
+const NO_EDITS: TextEdits = { titles: {}, insights: {} }
 
 export default function App() {
   const [ds, setDs] = useState<Dataset>(sampleDataset)
@@ -69,11 +71,47 @@ export default function App() {
   const [selected, setSelected] = useState<SlideId>('capa')
   const [exporting, setExporting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [filters, setFilters] = useState<Filters>(NO_FILTERS)
+  const [edits, setEdits] = useState<TextEdits>(NO_EDITS)
   const fileInput = useRef<HTMLInputElement>(null)
   const dark = useDarkMode()
   const theme = themeById(themeId)
 
-  const report = useMemo(() => buildReport(ds, settings), [ds, settings])
+  const baseReport = useMemo(() => buildReport(ds, settings, filters), [ds, settings, filters])
+  // Destaques reescritos na prévia valem também para o painel e o PDF.
+  const report = useMemo(
+    () => ({ ...baseReport, insights: baseReport.insights.map((t, i) => (edits.insights[i] ? { text: edits.insights[i] } : t)) }),
+    [baseReport, edits.insights],
+  )
+  const filteredDs = useMemo(() => ({ ...ds, rows: applyFilters(ds, settings, filters).rows }), [ds, settings, filters])
+
+  // Os destaques automáticos mudam com a análise; um texto editado para outra análise ficaria errado.
+  const analysisKey = JSON.stringify([settings.cat, settings.val, settings.agg, settings.date, filters])
+  const lastKey = useRef(analysisKey)
+  useEffect(() => {
+    if (lastKey.current === analysisKey) return
+    lastKey.current = analysisKey
+    setEdits((e) => (Object.keys(e.insights).length ? { ...e, insights: {} } : e))
+  }, [analysisKey])
+
+  const onEdit = useCallback((e: TextEdit) => {
+    if (e.kind === 'title' && e.slide === 'capa') {
+      setSettings((s) => ({ ...s, title: e.text || s.title }))
+      return
+    }
+    setEdits((prev) => {
+      if (e.kind === 'title') {
+        const titles = { ...prev.titles }
+        if (e.text) titles[e.slide] = e.text
+        else delete titles[e.slide]
+        return { ...prev, titles }
+      }
+      const insights = { ...prev.insights }
+      if (e.text) insights[e.index] = e.text
+      else delete insights[e.index]
+      return { ...prev, insights }
+    })
+  }, [])
 
   useEffect(() => store.set('prisma.theme', themeId), [themeId])
   useEffect(() => {
@@ -98,6 +136,8 @@ export default function App() {
   const loadData = useCallback((next: Dataset) => {
     setDs(next)
     setSettings(defaultSettings(next))
+    setFilters(NO_FILTERS)
+    setEdits(NO_EDITS)
   }, [])
 
   const onFile = useCallback(
@@ -181,12 +221,14 @@ export default function App() {
         <main>
           <Uploader sample={ds.sample} error={error} onFile={onFile} inputRef={fileInput} />
           <Controls ds={ds} settings={settings} sheets={workbook?.SheetNames ?? []} sheet={sheet} onSheet={onSheet} onChange={setSettings} />
+          <FiltersBar ds={ds} settings={settings} filters={filters} shown={report.rowCount} onChange={setFilters} />
 
           <section className="report-head">
             <div>
               <h1 className="report-title">{settings.title.trim() || 'Relatório'}</h1>
               <p className="report-sub">
-                {ds.fileName} · {ds.rows.length} linhas · gerado em {today()}
+                {ds.fileName} · {report.rowCount === ds.rows.length ? `${ds.rows.length} linhas` : `${report.rowCount} de ${ds.rows.length} linhas`}
+                {report.filterLabel && ` (${report.filterLabel})`} · gerado em {today()}
               </p>
             </div>
             <div className="tabs" role="tablist" aria-label="Visualização">
@@ -200,14 +242,14 @@ export default function App() {
           </section>
 
           {view === 'painel' ? (
-            <Dashboard ds={ds} report={report} theme={theme} dark={dark} />
+            <Dashboard ds={filteredDs} report={report} theme={theme} dark={dark} />
           ) : (
-            <SlideEditor report={report} theme={theme} deck={deck} onDeck={setDeck} selected={selected} onSelect={setSelected} />
+            <SlideEditor report={report} theme={theme} deck={deck} onDeck={setDeck} selected={selected} onSelect={setSelected} edits={edits} onEdit={onEdit} onResetEdits={() => setEdits(NO_EDITS)} />
           )}
         </main>
       </div>
 
-      {exporting && <ExportStage slides={exportSlides} report={report} theme={theme} onReady={onStageReady} />}
+      {exporting && <ExportStage slides={exportSlides} report={report} theme={theme} edits={edits} onReady={onStageReady} />}
       {toast && (
         <div className="toast" role="status">
           {toast}

@@ -55,6 +55,17 @@ export function Controls({ ds, settings, sheets, sheet, onSheet, onChange }: Pro
           <option value="count">Contagem de linhas</option>
         </select>
       </label>
+      <label htmlFor="val2Sel">
+        Comparar com
+        <select id="val2Sel" value={settings.val2} onChange={(e) => set('val2', e.target.value)} disabled={nums.length < 2}>
+          <option value="">Nenhuma</option>
+          {nums
+            .filter((c) => c.name !== settings.val)
+            .map((c) => (
+              <option key={c.name}>{c.name}</option>
+            ))}
+        </select>
+      </label>
       <label htmlFor="dateSel">
         Linha do tempo
         <select id="dateSel" value={settings.date} onChange={(e) => set('date', e.target.value)}>

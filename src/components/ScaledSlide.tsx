@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { Slide, SLIDE_H, SLIDE_W, type SlideId, type SlideProps } from '../slides/slides'
 
 /** Mostra um slide de 1280×720 encolhido para a largura disponível, mantendo 16:9. */
-export function ScaledSlide(props: SlideProps & { id: SlideId }) {
+export function ScaledSlide({ interactive, ...props }: SlideProps & { id: SlideId; interactive?: boolean }) {
   const box = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.25)
   useLayoutEffect(() => {
@@ -16,7 +16,7 @@ export function ScaledSlide(props: SlideProps & { id: SlideId }) {
   }, [])
   return (
     <div className="scaled" ref={box} style={{ aspectRatio: `${SLIDE_W} / ${SLIDE_H}` }}>
-      <div className="scaled-inner" style={{ transform: `scale(${scale})` }}>
+      <div className={`scaled-inner${interactive ? ' interactive' : ''}`} style={{ transform: `scale(${scale})` }}>
         <Slide {...props} />
       </div>
     </div>
