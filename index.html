@@ -57,6 +57,7 @@ button.primary { background: var(--accent); color: var(--accent-ink); border-col
 button:disabled { opacity: .6; cursor: progress; }
 button:focus-visible, select:focus-visible, input:focus-visible, .drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 main { padding-block: 24px 64px; display: grid; gap: 28px; }
+main > * { min-width: 0; }
 .drop { border: 1.5px dashed var(--line); border-radius: 12px; padding: 18px 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; background: var(--surface); cursor: pointer; transition: border-color .15s, background .15s; }
 .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
 .drop strong { font-family: var(--display); font-weight: 500; font-size: 17px; }
@@ -416,7 +417,7 @@ function makeCharts(R, theme, targets) {
   if (targets.pie) out.pie = new Chart(targets.pie, {
     type: 'doughnut',
     data: { labels: pie.map(x => x.k), datasets: [{ data: pie.map(x => x.share), backgroundColor: pie.map((_, i) => colors[i % colors.length]), borderColor: theme.surface, borderWidth: 2 }] },
-    options: { ...base, cutout: '58%', plugins: { ...base.plugins, legend: { position: 'right', labels: { ...base.plugins.legend.labels, boxWidth: 12, generateLabels: ch => ch.data.labels.map((l, i) => ({ text: `${l}  ${pct(ch.data.datasets[0].data[i])}`, fillStyle: colors[i % colors.length], strokeStyle: colors[i % colors.length], fontColor: theme.fg, index: i })) } }, tooltip: { callbacks: { label: c => ` ${c.label}: ${pct(c.parsed)}` } } } },
+    options: { ...base, cutout: '58%', plugins: { ...base.plugins, legend: { position: (theme.responsive !== false && window.innerWidth < 640) ? 'bottom' : 'right', labels: { ...base.plugins.legend.labels, boxWidth: 12, generateLabels: ch => ch.data.labels.map((l, i) => ({ text: `${l}  ${pct(ch.data.datasets[0].data[i])}`, fillStyle: colors[i % colors.length], strokeStyle: colors[i % colors.length], fontColor: theme.fg, index: i })) } }, tooltip: { callbacks: { label: c => ` ${c.label}: ${pct(c.parsed)}` } } } },
   });
   if (R.series && targets.line) {
     out.line = new Chart(targets.line, {
