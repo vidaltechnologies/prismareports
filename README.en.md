@@ -64,11 +64,13 @@ Everything runs in the browser. Your data is never sent to a server.
   picked from a dropdown. The theme applies to the page, the slides and the PDF.
 - **PDF and PowerPoint slides:** a 16:9 presentation with cover, key figures, shares, bars,
   distribution, monthly trend, comparison, highlights, ranking and a detail table. The
-  **Download slides** button offers both formats. In the `.pptx`, each slide is a
-  high-resolution image, with its title in the speaker notes.
+  **Download slides** button offers both formats. In the `.pptx`, titles, text, charts and
+  tables are native PowerPoint elements: you can edit the text, change colors and open each
+  chart's data in PowerPoint, Keynote or Google Slides.
 - **Portuguese, English and Spanish:** the flags in the top-right corner switch the language
-  of the page, the slides, the highlights and the number and date format. The choice is saved
-  in the browser; on the first visit, the browser's language is used.
+  of the page, the slides, the highlights and the number and date format. The sample data
+  switches too, with translated column names and values. The choice is saved in the browser;
+  on the first visit, the browser's language is used.
 - **Light and dark mode:** the page follows the system setting.
 - **Responsive:** works on desktop and mobile.
 
@@ -102,6 +104,10 @@ The interface is currently in Portuguese.
 | Dashboard in Spanish | Download as PDF or PowerPoint |
 | --- | --- |
 | ![Dashboard in Spanish, with Spanish number format](docs/screenshots/idioma-espanhol.png) | ![Download slides menu with PDF and PowerPoint options](docs/screenshots/download.png) |
+
+### Editable PowerPoint
+
+![Four slides from the .pptx file with rings, bar chart, comparison and ranking](docs/screenshots/powerpoint.png)
 
 ### Dashboard
 
@@ -147,7 +153,7 @@ The interface is currently in Portuguese.
 | [SheetJS](https://sheetjs.com/) | Reading Excel and CSV files |
 | [Chart.js](https://www.chartjs.org/) | Bar, doughnut and line charts |
 | [html-to-image](https://github.com/bubkoo/html-to-image) and [jsPDF](https://github.com/parallax/jsPDF) | Capturing the slides and building the PDF |
-| [PptxGenJS](https://gitbrent.github.io/PptxGenJS/) | Building the PowerPoint file |
+| [PptxGenJS](https://gitbrent.github.io/PptxGenJS/) | PowerPoint with editable text, charts and tables |
 | [Fontsource](https://fontsource.org/) | Theme fonts bundled with the project |
 
 The project has no database, login or server. The build is a set of static files,
@@ -201,7 +207,7 @@ src/
 │   ├── LanguageSwitcher.tsx # Flags to switch the language
 │   ├── ExportMenu.tsx      # Download slides button, with PDF and PowerPoint
 │   ├── ScaledSlide.tsx     # 1280×720 slide scaled down to fit the screen
-│   ├── ExportStage.tsx     # Renders slides at full size for export
+│   ├── ExportStage.tsx     # Renders slides at full size for the PDF
 │   ├── ChartCanvas.tsx     # Chart.js chart as a component
 │   └── Ring.tsx            # SVG percentage ring
 ├── slides/
@@ -210,9 +216,10 @@ src/
     ├── parse.ts            # Spreadsheet reading and column type detection
     ├── report.ts           # Grouping, totals, monthly series and highlights
     ├── charts.ts           # Chart configuration
-    ├── exportSlides.ts     # Slide capture, PDF and PowerPoint generation
+    ├── exportSlides.ts     # Slide capture, PDF generation and download
+    ├── pptx.ts             # PowerPoint built from native elements, slide by slide
     ├── format.ts           # Numbers, percentages and dates in the chosen language
-    └── sample.ts           # Sample data
+    └── sample.ts           # Sample data, in the three languages
 exemplos/                   # Test spreadsheet
 docs/                       # Logo and images used in this README
 ```

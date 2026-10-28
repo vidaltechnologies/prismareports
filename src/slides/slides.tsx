@@ -54,6 +54,46 @@ export function slideVars(t: Theme): CSSProperties {
   } as CSSProperties
 }
 
+/** Sobretítulo e título automático de cada slide; o PowerPoint usa os mesmos textos. */
+export function slideHeading(id: SlideId, R: Report): { kicker: string; title: string } {
+  const T = t()
+  const { cat, val } = R.settings
+  switch (id) {
+    case 'capa':
+      return { kicker: 'Prisma Reports', title: R.settings.title }
+    case 'indicadores':
+      return { kicker: T.kOverview, title: T.mainKpis }
+    case 'participacao':
+      return { kicker: T.kShare, title: T.shareBy(cat) }
+    case 'barras':
+      return { kicker: T.kCompare, title: T.aBy(R.aggLabel, cat) }
+    case 'distribuicao':
+      return { kicker: T.kCompare, title: T.distributionBy(cat) }
+    case 'evolucao':
+      return { kicker: T.kTrend, title: T.perMonth(R.aggLabel) }
+    case 'comparacao':
+      return { kicker: T.kComparison, title: R.compare ? T.compareTitle(R.compare.nameA, R.compare.nameB, cat) : '' }
+    case 'destaques':
+      return { kicker: T.kReading, title: T.highlights }
+    case 'ranking':
+      return { kicker: T.kRanking, title: T.rankingBy(cat) }
+    case 'detalhes':
+      return { kicker: T.kDetails, title: val ? T.topRecords(val) : T.firstRecords }
+  }
+}
+
+/** Itens do slide de indicadores (o último é o maior grupo). */
+export function kpiItems(R: Report) {
+  const T = t()
+  return [
+    { l: T.rowsAnalyzed, v: int(R.rowCount), f: T.columns(R.colCount) },
+    R.hasValue ? { l: T.totalOf(R.settings.val), v: compact(R.total), f: fmt(R.total) } : null,
+    R.hasValue ? { l: T.avgOf(R.settings.val), v: compact(R.avg), f: T.minMax(compact(R.min), compact(R.max)) } : null,
+    { l: T.groupsIn(R.settings.cat), v: int(R.groups.length), f: T.distinctValues },
+    R.groups[0] ? { l: T.topGroup, v: R.groups[0].label, f: T.ofTotal(pct(R.groups[0].share)) } : null,
+  ].filter((x): x is { l: string; v: string; f: string } => !!x)
+}
+
 function slideLook(t: Theme): ChartLook {
   return { palette: t.palette, fg: t.slide.fg, muted: t.slide.muted, line: t.slide.line, surface: t.slide.bg, font: t.body, fontSize: 17, animate: false }
 }
@@ -138,16 +178,9 @@ function Cover({ report, theme, onEdit }: SlideProps) {
 
 function Kpis(p: SlideProps) {
   const R = p.report
-  const T = t()
-  const items = [
-    { l: T.rowsAnalyzed, v: int(R.rowCount), f: T.columns(R.colCount) },
-    R.hasValue ? { l: T.totalOf(R.settings.val), v: compact(R.total), f: fmt(R.total) } : null,
-    R.hasValue ? { l: T.avgOf(R.settings.val), v: compact(R.avg), f: T.minMax(compact(R.min), compact(R.max)) } : null,
-    { l: T.groupsIn(R.settings.cat), v: int(R.groups.length), f: T.distinctValues },
-    R.groups[0] ? { l: T.topGroup, v: R.groups[0].label, f: T.ofTotal(pct(R.groups[0].share)) } : null,
-  ].filter((x): x is { l: string; v: string; f: string } => !!x)
+  const items = kpiItems(R)
   return (
-    <Frame {...p} kicker={T.kOverview} title={T.mainKpis}>
+    <Frame {...p} {...slideHeading('indicadores', R)}>
       <div className={`s-kpis n${items.length}`}>
         {items.map((k, i) => (
           <div className="s-kpi" key={k.l}>
@@ -167,7 +200,7 @@ function Shares(p: SlideProps) {
   const items = topWithOthers(p.report.groups, 5).slice(0, 5)
   const size = items.length > 4 ? 170 : 200
   return (
-    <Frame {...p} kicker={t().kShare} title={t().shareBy(p.report.settings.cat)}>
+    <Frame {...p} {...slideHeading('participacao', p.report)}>
       <div className="s-rings">
         {items.map((g, i) => (
           <div className="s-ring" key={g.label}>
@@ -184,7 +217,7 @@ function Shares(p: SlideProps) {
 function Bars(p: SlideProps) {
   const R = p.report
   return (
-    <Frame {...p} kicker={t().kCompare} title={t().aBy(R.aggLabel, R.settings.cat)}>
+    <Frame {...p} {...slideHeading('barras', R)}>
       <ChartCanvas kind="bar" report={R} look={slideLook(p.theme)} label={t().aBy(R.aggLabel, R.settings.cat)} />
     </Frame>
   )
@@ -193,7 +226,7 @@ function Bars(p: SlideProps) {
 function Pie(p: SlideProps) {
   const R = p.report
   return (
-    <Frame {...p} kicker={t().kCompare} title={t().distributionBy(R.settings.cat)}>
+    <Frame {...p} {...slideHeading('distribuicao', R)}>
       <ChartCanvas kind="pie" report={R} look={slideLook(p.theme)} label={t().distributionBy(R.settings.cat)} />
     </Frame>
   )
@@ -202,7 +235,7 @@ function Pie(p: SlideProps) {
 function Trend(p: SlideProps) {
   const R = p.report
   return (
-    <Frame {...p} kicker={t().kTrend} title={t().perMonth(R.aggLabel)}>
+    <Frame {...p} {...slideHeading('evolucao', R)}>
       <ChartCanvas kind="line" report={R} look={slideLook(p.theme)} label={t().perMonth(R.aggLabel)} />
     </Frame>
   )
@@ -210,7 +243,7 @@ function Trend(p: SlideProps) {
 
 function Highlights(p: SlideProps) {
   return (
-    <Frame {...p} kicker={t().kReading} title={t().highlights}>
+    <Frame {...p} {...slideHeading('destaques', p.report)}>
       <ul className="s-insights">
         {p.report.insights.map((t, i) => (
           <li key={i}>
@@ -228,7 +261,7 @@ function Ranking(p: SlideProps) {
   const rows = R.groups.slice(0, 10)
   const maxShare = Math.max(...rows.map((r) => r.share), 0.0001)
   return (
-    <Frame {...p} kicker={t().kRanking} title={t().rankingBy(R.settings.cat)}>
+    <Frame {...p} {...slideHeading('ranking', R)}>
       <table className="s-rank">
         <thead>
           <tr>
@@ -262,7 +295,7 @@ function Ranking(p: SlideProps) {
 function Compare(p: SlideProps) {
   const C = p.report.compare!
   return (
-    <Frame {...p} kicker={t().kComparison} title={t().compareTitle(C.nameA, C.nameB, p.report.settings.cat)}>
+    <Frame {...p} {...slideHeading('comparacao', p.report)}>
       <ChartCanvas kind="compare" report={p.report} look={slideLook(p.theme)} label={t().compareTitle(C.nameA, C.nameB, p.report.settings.cat)} />
     </Frame>
   )
@@ -271,7 +304,7 @@ function Compare(p: SlideProps) {
 function Details(p: SlideProps) {
   const D = p.report.details!
   return (
-    <Frame {...p} kicker={t().kDetails} title={p.report.settings.val ? t().topRecords(p.report.settings.val) : t().firstRecords}>
+    <Frame {...p} {...slideHeading('detalhes', p.report)}>
       <table className="s-rank s-details">
         <thead>
           <tr>

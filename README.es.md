@@ -66,9 +66,12 @@ Todo funciona en el navegador. Los datos no se envían a ningún servidor.
 - **Diapositivas en PDF y PowerPoint:** presentación 16:9 con portada, indicadores,
   participación, barras, distribución, evolución mensual, comparación, destacados, ranking y
   tabla de detalle. El botón **Descargar diapositivas** ofrece los dos formatos. En el
-  `.pptx`, cada diapositiva es una imagen en alta resolución, con el título en las notas.
+  `.pptx`, títulos, textos, gráficos y tablas son elementos nativos de PowerPoint: puedes
+  editar el texto, cambiar colores y abrir los datos de cada gráfico en PowerPoint, Keynote o
+  Presentaciones de Google.
 - **Portugués, inglés y español:** las banderas en la esquina superior derecha cambian el
-  idioma de la página, las diapositivas, los destacados y el formato de números y fechas. La
+  idioma de la página, las diapositivas, los destacados y el formato de números y fechas. Los
+  datos de ejemplo también cambian, con los nombres de columnas y valores traducidos. La
   elección queda guardada en el navegador; en la primera visita se usa el idioma del navegador.
 - **Modo claro y oscuro:** la página sigue la configuración del sistema.
 - **Responsivo:** funciona en computadora y en celular.
@@ -103,6 +106,10 @@ Por ahora, la interfaz está en portugués.
 | Panel en español | Descarga en PDF o PowerPoint |
 | --- | --- |
 | ![Panel en español, con números en formato español](docs/screenshots/idioma-espanhol.png) | ![Menú Descargar diapositivas con las opciones PDF y PowerPoint](docs/screenshots/download.png) |
+
+### PowerPoint editable
+
+![Cuatro diapositivas del archivo .pptx con anillos, gráfico de barras, comparación y ranking](docs/screenshots/powerpoint.png)
 
 ### Panel
 
@@ -148,7 +155,7 @@ Por ahora, la interfaz está en portugués.
 | [SheetJS](https://sheetjs.com/) | Lectura de archivos Excel y CSV |
 | [Chart.js](https://www.chartjs.org/) | Gráficos de barras, dona y línea |
 | [html-to-image](https://github.com/bubkoo/html-to-image) y [jsPDF](https://github.com/parallax/jsPDF) | Captura de las diapositivas y armado del PDF |
-| [PptxGenJS](https://gitbrent.github.io/PptxGenJS/) | Armado del archivo de PowerPoint |
+| [PptxGenJS](https://gitbrent.github.io/PptxGenJS/) | PowerPoint con textos, gráficos y tablas editables |
 | [Fontsource](https://fontsource.org/) | Fuentes de los temas incluidas en el proyecto |
 
 El proyecto no usa base de datos, login ni servidor. La versión final es un conjunto de
@@ -202,7 +209,7 @@ src/
 │   ├── LanguageSwitcher.tsx # Banderas para cambiar el idioma
 │   ├── ExportMenu.tsx      # Botón Descargar diapositivas, con PDF y PowerPoint
 │   ├── ScaledSlide.tsx     # Diapositiva de 1280×720 reducida para caber en pantalla
-│   ├── ExportStage.tsx     # Renderiza las diapositivas a tamaño real para la exportación
+│   ├── ExportStage.tsx     # Renderiza las diapositivas a tamaño real para el PDF
 │   ├── ChartCanvas.tsx     # Gráfico de Chart.js como componente
 │   └── Ring.tsx            # Anillo de porcentaje en SVG
 ├── slides/
@@ -211,9 +218,10 @@ src/
     ├── parse.ts            # Lectura de la hoja y detección de tipos de columna
     ├── report.ts           # Agrupaciones, totales, serie mensual y destacados
     ├── charts.ts           # Configuración de los gráficos
-    ├── exportSlides.ts     # Captura de diapositivas y generación del PDF y del PowerPoint
+    ├── exportSlides.ts     # Captura de diapositivas, generación del PDF y descarga
+    ├── pptx.ts             # PowerPoint con elementos nativos, diapositiva por diapositiva
     ├── format.ts           # Números, porcentajes y fechas en el idioma elegido
-    └── sample.ts           # Datos de ejemplo
+    └── sample.ts           # Datos de ejemplo, en los tres idiomas
 exemplos/                   # Hoja de prueba
 docs/                       # Logo e imágenes usadas en este README
 ```

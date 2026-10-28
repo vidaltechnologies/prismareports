@@ -64,18 +64,3 @@ export async function slidesToPdf(images: string[]): Promise<Blob> {
   })
   return doc.output('blob')
 }
-
-/** Uma apresentação do PowerPoint em 16:9, com cada slide como imagem de página inteira. */
-export async function slidesToPptx(images: string[], title: string, notes: string[]): Promise<Blob> {
-  const { default: PptxGenJS } = await import('pptxgenjs')
-  const pptx = new PptxGenJS()
-  pptx.layout = 'LAYOUT_16x9'
-  pptx.title = title
-  pptx.company = 'Prisma Reports'
-  images.forEach((data, i) => {
-    const slide = pptx.addSlide()
-    slide.addImage({ data, x: 0, y: 0, w: '100%', h: '100%', altText: notes[i] })
-    if (notes[i]) slide.addNotes(notes[i])
-  })
-  return (await pptx.write({ outputType: 'blob' })) as Blob
-}

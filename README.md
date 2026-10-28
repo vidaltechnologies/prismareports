@@ -63,10 +63,12 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
   numa lista suspensa. O tema vale para a página, os slides e o PDF.
 - **Slides em PDF e PowerPoint:** apresentação 16:9 com capa, indicadores, participação,
   barras, distribuição, evolução por mês, comparação, destaques, ranking e tabela de detalhes.
-  O botão **Baixar slides** oferece os dois formatos. No `.pptx`, cada slide é uma imagem em
-  alta resolução, com o título nas anotações.
+  O botão **Baixar slides** oferece os dois formatos. No `.pptx`, títulos, textos, gráficos e
+  tabelas são elementos nativos do PowerPoint: dá para editar o texto, mudar cores e abrir os
+  dados de cada gráfico no PowerPoint, no Keynote ou no Google Apresentações.
 - **Português, inglês e espanhol:** as bandeiras no canto superior direito trocam o idioma
-  da página, dos slides, dos destaques e do formato dos números e datas. A escolha fica
+  da página, dos slides, dos destaques e do formato dos números e datas. Os dados de exemplo
+  também mudam de idioma, com os nomes das colunas e dos valores traduzidos. A escolha fica
   salva no navegador; na primeira visita, vale o idioma do navegador.
 - **Tema claro e escuro:** a página segue o tema do sistema.
 - **Responsivo:** funciona no computador e no celular.
@@ -99,6 +101,10 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 | Painel em espanhol | Download em PDF ou PowerPoint |
 | --- | --- |
 | ![Painel em espanhol, com números no formato espanhol](docs/screenshots/idioma-espanhol.png) | ![Menu Baixar slides com as opções PDF e PowerPoint](docs/screenshots/download.png) |
+
+### PowerPoint editável
+
+![Quatro slides do arquivo .pptx com anéis, gráfico de barras, comparação e ranking](docs/screenshots/powerpoint.png)
 
 ### Painel
 
@@ -144,7 +150,7 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 | [SheetJS](https://sheetjs.com/) | Leitura de arquivos Excel e CSV |
 | [Chart.js](https://www.chartjs.org/) | Gráficos de barras, rosca e linha |
 | [html-to-image](https://github.com/bubkoo/html-to-image) e [jsPDF](https://github.com/parallax/jsPDF) | Captura dos slides e montagem do PDF |
-| [PptxGenJS](https://gitbrent.github.io/PptxGenJS/) | Montagem do arquivo do PowerPoint |
+| [PptxGenJS](https://gitbrent.github.io/PptxGenJS/) | PowerPoint com textos, gráficos e tabelas editáveis |
 | [Fontsource](https://fontsource.org/) | Fontes dos temas embutidas no projeto |
 
 O projeto não usa banco de dados, login nem servidor. A versão final é um conjunto de
@@ -198,7 +204,7 @@ src/
 │   ├── LanguageSwitcher.tsx # Bandeiras para trocar o idioma
 │   ├── ExportMenu.tsx      # Botão Baixar slides, com PDF e PowerPoint
 │   ├── ScaledSlide.tsx     # Slide de 1280×720 encolhido para caber na tela
-│   ├── ExportStage.tsx     # Renderiza os slides em tamanho real para a exportação
+│   ├── ExportStage.tsx     # Renderiza os slides em tamanho real para o PDF
 │   ├── ChartCanvas.tsx     # Gráfico do Chart.js como componente
 │   └── Ring.tsx            # Anel de percentual em SVG
 ├── slides/
@@ -207,9 +213,10 @@ src/
     ├── parse.ts            # Leitura da planilha e detecção dos tipos de coluna
     ├── report.ts           # Agrupamentos, totais, série mensal e destaques
     ├── charts.ts           # Configuração dos gráficos
-    ├── exportSlides.ts     # Captura dos slides e geração do PDF e do PowerPoint
+    ├── exportSlides.ts     # Captura dos slides, geração do PDF e download
+    ├── pptx.ts             # PowerPoint com elementos nativos, slide a slide
     ├── format.ts           # Números, percentuais e datas no idioma escolhido
-    └── sample.ts           # Dados de exemplo
+    └── sample.ts           # Dados de exemplo, nos três idiomas
 exemplos/                   # Planilha de teste
 docs/                       # Logo e imagens usadas neste README
 ```

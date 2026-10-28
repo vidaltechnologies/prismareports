@@ -73,7 +73,7 @@ export function defaultSettings(ds: Dataset): Settings {
   const nums = ds.columns.filter((c) => c.type === 'number')
   const dates = ds.columns.filter((c) => c.type === 'date')
   const cat = cats.find((c) => c.distinct >= 2 && c.distinct <= 12) ?? cats[0] ?? ds.columns[0]
-  const val = nums.find((n) => /receita|valor|total|venda|faturamento|amount|revenue|price|preço/i.test(n.name)) ?? nums[0]
+  const val = nums.find((n) => /receita|valor|total|venda|faturamento|amount|revenue|sales|price|preço|ingreso|importe/i.test(n.name)) ?? nums[0]
   return {
     title: autoTitle(ds),
     cat: cat?.name ?? '',

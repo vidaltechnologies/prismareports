@@ -10,11 +10,12 @@ import { SlideEditor, visibleSlides, type DeckItem } from './components/SlideEdi
 import { ThemePicker } from './components/ThemePicker'
 import { Uploader } from './components/Uploader'
 import { getLocale, LOCALES, setLocale, t, type Locale } from './i18n'
-import { captureSlides, saveBlob, slidesToPdf, slidesToPptx } from './lib/exportSlides'
+import { captureSlides, saveBlob, slidesToPdf } from './lib/exportSlides'
+import { reportToPptx } from './lib/pptx'
 import { int, slug, today } from './lib/format'
 import { readWorkbook, sheetToDataset, type Dataset } from './lib/parse'
 import { applyFilters, autoTitle, buildReport, defaultSettings, NO_FILTERS, type Filters, type Settings } from './lib/report'
-import { sampleDataset } from './lib/sample'
+import { sampleDataset, translateSample } from './lib/sample'
 import { SLIDES, type SlideId, type TextEdit, type TextEdits } from './slides/slides'
 import { themeById, type ThemeId } from './themes'
 
@@ -130,9 +131,17 @@ export default function App() {
   const changeLang = (l: Locale) => {
     // Um título que ainda é o automático acompanha o idioma; um título escrito pela pessoa fica como está.
     const wasAuto = settings.title === autoTitle(ds)
+    const from = lang
     setLocale(l)
     setLang(l)
-    if (wasAuto) setSettings((s) => ({ ...s, title: autoTitle(ds) }))
+    if (ds.sample) {
+      // Os dados de exemplo também mudam de idioma; as escolhas e os filtros acompanham os novos nomes.
+      const tr = (text: string) => translateSample(text, from, l)
+      const next = sampleDataset(l)
+      setDs(next)
+      setSettings((s) => ({ ...s, cat: tr(s.cat), val: tr(s.val), date: tr(s.date), val2: tr(s.val2), title: wasAuto ? autoTitle(next) : s.title }))
+      setFilters((f) => ({ ...f, col: tr(f.col), values: f.values.map(tr) }))
+    } else if (wasAuto) setSettings((s) => ({ ...s, title: autoTitle(ds) }))
   }
   useEffect(() => {
     store.set('prisma.lang', lang)
@@ -198,16 +207,11 @@ export default function App() {
 
   const exportSlides = visibleSlides(deck, report)
 
-  const onStageReady = useCallback(
-    async (nodes: HTMLElement[]) => {
-      const format = exporting ?? 'pdf'
+  const finishExport = useCallback(
+    async (format: ExportFormat, make: () => Promise<Blob>) => {
       const T = t()
       try {
-        const images = await captureSlides(nodes)
-        // Os títulos viram as anotações de cada slide no PowerPoint (e o texto alternativo da imagem).
-        const notes = nodes.map((n) => n.querySelector('.s-title, .cover-title')?.textContent?.trim() ?? '')
-        const blob = format === 'pptx' ? await slidesToPptx(images, settings.title, notes) : await slidesToPdf(images)
-        const result = await saveBlob(blob, `${slug(settings.title)}.${format}`)
+        const result = await saveBlob(await make(), `${slug(settings.title)}.${format}`)
         const label = format === 'pptx' ? 'PowerPoint' : 'PDF'
         setToast(result === 'saved' ? T.saved(label) : result === 'declined' ? T.declined : T.saveFailed)
       } catch (e) {
@@ -217,8 +221,15 @@ export default function App() {
         setExporting(null)
       }
     },
-    [settings.title, exporting],
+    [settings.title],
   )
+
+  // O PDF é uma captura dos slides renderizados (ExportStage); o PowerPoint é montado com elementos nativos, editáveis.
+  const onStageReady = useCallback((nodes: HTMLElement[]) => finishExport('pdf', async () => slidesToPdf(await captureSlides(nodes))), [finishExport])
+  const onExport = (format: ExportFormat) => {
+    setExporting(format)
+    if (format === 'pptx') finishExport('pptx', () => reportToPptx(exportSlides, report, theme, edits))
+  }
 
   return (
     <>
@@ -239,7 +250,7 @@ export default function App() {
             <button type="button" onClick={() => fileInput.current?.click()}>
               {t().openFile}
             </button>
-            <ExportMenu busy={!!exporting} disabled={!exportSlides.length} onExport={setExporting} />
+            <ExportMenu busy={!!exporting} disabled={!exportSlides.length} onExport={onExport} />
           </div>
           <LanguageSwitcher value={lang} onChange={changeLang} />
         </div>
@@ -277,7 +288,7 @@ export default function App() {
         </main>
       </div>
 
-      {exporting && <ExportStage slides={exportSlides} report={report} theme={theme} edits={edits} onReady={onStageReady} />}
+      {exporting === 'pdf' && <ExportStage slides={exportSlides} report={report} theme={theme} edits={edits} onReady={onStageReady} />}
       {toast && (
         <div className="toast" role="status">
           {toast}
