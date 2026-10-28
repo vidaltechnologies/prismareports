@@ -6,7 +6,7 @@
 
 <p align="center">
   Envie um <strong>Excel ou CSV</strong> e receba na hora um relatório com indicadores, percentuais e gráficos.<br />
-  Monte a apresentação na própria página e baixe os slides em PDF.
+  Monte a apresentação na própria página e baixe os slides em PDF ou PowerPoint.
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 O Prisma Reports transforma uma planilha em um relatório visual sem que ninguém precise
 montar gráficos à mão. A pessoa envia o arquivo, escolhe o que quer analisar, ajusta os
-slides e baixa a apresentação pronta em PDF.
+slides e baixa a apresentação pronta em PDF ou PowerPoint.
 
 A inspiração é o [beautiful.ai](https://www.beautiful.ai/): slides bonitos, com layouts que
 se ajustam sozinhos ao conteúdo e temas prontos, aqui alimentados pelos dados da planilha.
@@ -39,7 +39,7 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 - Ler qualquer planilha com cabeçalho na primeira linha, sem configuração.
 - Mostrar os números mais importantes de forma clara e visual.
 - Deixar a pessoa mudar a análise (agrupamento, valor, cálculo) e ver o resultado na hora.
-- Gerar uma apresentação em PDF igual à prévia, pronta para enviar ou apresentar.
+- Gerar uma apresentação em PDF ou PowerPoint igual à prévia, pronta para enviar ou apresentar.
 
 ## Funcionalidades
 
@@ -64,8 +64,13 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
   numérica para ver as duas lado a lado por grupo, cada uma no seu eixo.
 - **Três temas:** Prisma, Executivo e Vibrante, cada um com suas cores e fontes, escolhidos
   numa lista suspensa. O tema vale para a página, os slides e o PDF.
-- **Slides em PDF:** apresentação 16:9 com capa, indicadores, participação, barras,
-  distribuição, evolução por mês, comparação, destaques, ranking e tabela de detalhes.
+- **Slides em PDF e PowerPoint:** apresentação 16:9 com capa, indicadores, participação,
+  barras, distribuição, evolução por mês, comparação, destaques, ranking e tabela de detalhes.
+  O botão **Baixar slides** oferece os dois formatos. No `.pptx`, cada slide é uma imagem em
+  alta resolução, com o título nas anotações.
+- **Português, inglês e espanhol:** as bandeiras no canto superior direito trocam o idioma
+  da página, dos slides, dos destaques e do formato dos números e datas. A escolha fica
+  salva no navegador; na primeira visita, vale o idioma do navegador.
 - **Tema claro e escuro:** a página segue o tema do sistema.
 - **Responsivo:** funciona no computador e no celular.
 
@@ -89,6 +94,14 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 ![Filtros por período e por produto](docs/screenshots/filtros.png)
 
 ![Destaque sendo editado direto na prévia do slide](docs/screenshots/edicao.png)
+
+### Idiomas e download
+
+![Aba Slides em inglês](docs/screenshots/idioma-ingles.png)
+
+| Painel em espanhol | Download em PDF ou PowerPoint |
+| --- | --- |
+| ![Painel em espanhol, com números no formato espanhol](docs/screenshots/idioma-espanhol.png) | ![Menu Baixar slides com as opções PDF e PowerPoint](docs/screenshots/download.png) |
 
 ### Painel
 
@@ -134,6 +147,7 @@ Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 | [SheetJS](https://sheetjs.com/) | Leitura de arquivos Excel e CSV |
 | [Chart.js](https://www.chartjs.org/) | Gráficos de barras, rosca e linha |
 | [html-to-image](https://github.com/bubkoo/html-to-image) e [jsPDF](https://github.com/parallax/jsPDF) | Captura dos slides e montagem do PDF |
+| [PptxGenJS](https://gitbrent.github.io/PptxGenJS/) | Montagem do arquivo do PowerPoint |
 | [Fontsource](https://fontsource.org/) | Fontes dos temas embutidas no projeto |
 
 O projeto não usa banco de dados, login nem servidor. A versão final é um conjunto de
@@ -173,7 +187,8 @@ O workflow `.github/workflows/deploy.yml` publica o site no GitHub Pages sempre 
 ```
 src/
 ├── main.tsx                # Ponto de entrada
-├── App.tsx                 # Estado da página: dados, configurações, tema, slides e exportação
+├── App.tsx                 # Estado da página: dados, configurações, tema, idioma, slides e exportação
+├── i18n.ts                 # Textos da interface em português, inglês e espanhol
 ├── themes.ts               # Os três temas (cores e fontes)
 ├── styles.css              # Estilos da página e dos slides
 ├── components/
@@ -183,8 +198,10 @@ src/
 │   ├── Dashboard.tsx       # Aba Painel
 │   ├── SlideEditor.tsx     # Aba Slides: prévia, ordem e slides ocultos
 │   ├── ThemePicker.tsx     # Lista suspensa de temas
+│   ├── LanguageSwitcher.tsx # Bandeiras para trocar o idioma
+│   ├── ExportMenu.tsx      # Botão Baixar slides, com PDF e PowerPoint
 │   ├── ScaledSlide.tsx     # Slide de 1280×720 encolhido para caber na tela
-│   ├── ExportStage.tsx     # Renderiza os slides em tamanho real para o PDF
+│   ├── ExportStage.tsx     # Renderiza os slides em tamanho real para a exportação
 │   ├── ChartCanvas.tsx     # Gráfico do Chart.js como componente
 │   └── Ring.tsx            # Anel de percentual em SVG
 ├── slides/
@@ -193,8 +210,8 @@ src/
     ├── parse.ts            # Leitura da planilha e detecção dos tipos de coluna
     ├── report.ts           # Agrupamentos, totais, série mensal e destaques
     ├── charts.ts           # Configuração dos gráficos
-    ├── exportPdf.ts        # Captura dos slides e geração do PDF
-    ├── format.ts           # Números, percentuais e datas em pt-BR
+    ├── exportSlides.ts     # Captura dos slides e geração do PDF e do PowerPoint
+    ├── format.ts           # Números, percentuais e datas no idioma escolhido
     └── sample.ts           # Dados de exemplo
 exemplos/                   # Planilha de teste
 docs/                       # Logo e imagens usadas neste README
@@ -203,8 +220,8 @@ docs/                       # Logo e imagens usadas neste README
 ## Próximos passos
 
 - Salvar um relatório (configurações, filtros e textos) para abrir de novo depois.
-- Exportar também em PowerPoint (`.pptx`).
-- Interface em inglês e espanhol.
+- PowerPoint com textos e gráficos editáveis, em vez de uma imagem por slide.
+- Traduzir também os nomes das colunas dos dados de exemplo.
 
 ---
 

@@ -43,17 +43,39 @@ export async function saveBlob(blob: Blob, filename: string): Promise<SaveResult
   return 'saved'
 }
 
-/** Captura cada slide (já renderizado em 1280×720) e monta um PDF com uma página por slide. */
-export async function slidesToPdf(nodes: HTMLElement[]): Promise<Blob> {
-  // Carregadas só na hora de exportar, para a página abrir mais rápido.
-  const [{ getFontEmbedCSS, toJpeg }, { jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')])
+/** Captura cada slide (já renderizado em 1280×720) como JPEG. */
+export async function captureSlides(nodes: HTMLElement[]): Promise<string[]> {
+  // Carregada só na hora de exportar, para a página abrir mais rápido.
+  const { getFontEmbedCSS, toJpeg } = await import('html-to-image')
   await document.fonts.ready
   const fontEmbedCSS = await getFontEmbedCSS(nodes[0])
+  const out: string[] = []
+  for (const node of nodes) out.push(await toJpeg(node, { width: SLIDE_W, height: SLIDE_H, pixelRatio: 1.5, quality: 0.92, fontEmbedCSS, cacheBust: false }))
+  return out
+}
+
+/** Um PDF com uma página por slide. */
+export async function slidesToPdf(images: string[]): Promise<Blob> {
+  const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'landscape', unit: 'px', format: [SLIDE_W, SLIDE_H], hotfixes: ['px_scaling'], compress: true })
-  for (let i = 0; i < nodes.length; i++) {
-    const img = await toJpeg(nodes[i], { width: SLIDE_W, height: SLIDE_H, pixelRatio: 1.5, quality: 0.92, fontEmbedCSS, cacheBust: false })
+  images.forEach((img, i) => {
     if (i) doc.addPage([SLIDE_W, SLIDE_H], 'landscape')
     doc.addImage(img, 'JPEG', 0, 0, SLIDE_W, SLIDE_H)
-  }
+  })
   return doc.output('blob')
+}
+
+/** Uma apresentação do PowerPoint em 16:9, com cada slide como imagem de página inteira. */
+export async function slidesToPptx(images: string[], title: string, notes: string[]): Promise<Blob> {
+  const { default: PptxGenJS } = await import('pptxgenjs')
+  const pptx = new PptxGenJS()
+  pptx.layout = 'LAYOUT_16x9'
+  pptx.title = title
+  pptx.company = 'Prisma Reports'
+  images.forEach((data, i) => {
+    const slide = pptx.addSlide()
+    slide.addImage({ data, x: 0, y: 0, w: '100%', h: '100%', altText: notes[i] })
+    if (notes[i]) slide.addNotes(notes[i])
+  })
+  return (await pptx.write({ outputType: 'blob' })) as Blob
 }

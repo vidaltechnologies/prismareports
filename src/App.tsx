@@ -2,15 +2,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { WorkBook } from 'xlsx'
 import { Controls } from './components/Controls'
 import { Dashboard, uiPalette } from './components/Dashboard'
+import { ExportMenu, type ExportFormat } from './components/ExportMenu'
 import { ExportStage } from './components/ExportStage'
 import { FiltersBar } from './components/FiltersBar'
+import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { SlideEditor, visibleSlides, type DeckItem } from './components/SlideEditor'
 import { ThemePicker } from './components/ThemePicker'
 import { Uploader } from './components/Uploader'
-import { saveBlob, slidesToPdf } from './lib/exportPdf'
-import { slug, today } from './lib/format'
+import { getLocale, LOCALES, setLocale, t, type Locale } from './i18n'
+import { captureSlides, saveBlob, slidesToPdf, slidesToPptx } from './lib/exportSlides'
+import { int, slug, today } from './lib/format'
 import { readWorkbook, sheetToDataset, type Dataset } from './lib/parse'
-import { applyFilters, buildReport, defaultSettings, NO_FILTERS, type Filters, type Settings } from './lib/report'
+import { applyFilters, autoTitle, buildReport, defaultSettings, NO_FILTERS, type Filters, type Settings } from './lib/report'
 import { sampleDataset } from './lib/sample'
 import { SLIDES, type SlideId, type TextEdit, type TextEdits } from './slides/slides'
 import { themeById, type ThemeId } from './themes'
@@ -56,10 +59,19 @@ function useDarkMode() {
   return dark
 }
 
+function initialLocale(): Locale {
+  const saved = store.get('prisma.lang') as Locale | null
+  if (saved && LOCALES.includes(saved)) return saved
+  const nav = (navigator.language || 'pt').slice(0, 2)
+  return nav === 'en' || nav === 'es' ? nav : 'pt'
+}
+setLocale(initialLocale())
+
 const initialDeck = (): DeckItem[] => SLIDES.map((s) => ({ id: s.id, hidden: false }))
 const NO_EDITS: TextEdits = { titles: {}, insights: {} }
 
 export default function App() {
+  const [lang, setLang] = useState<Locale>(getLocale)
   const [ds, setDs] = useState<Dataset>(sampleDataset)
   const [settings, setSettings] = useState<Settings>(() => defaultSettings(ds))
   const [workbook, setWorkbook] = useState<WorkBook | null>(null)
@@ -69,7 +81,7 @@ export default function App() {
   const [themeId, setThemeId] = useState<ThemeId>(() => themeById(store.get('prisma.theme') ?? 'prisma').id)
   const [deck, setDeck] = useState<DeckItem[]>(initialDeck)
   const [selected, setSelected] = useState<SlideId>('capa')
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [edits, setEdits] = useState<TextEdits>(NO_EDITS)
@@ -77,10 +89,12 @@ export default function App() {
   const dark = useDarkMode()
   const theme = themeById(themeId)
 
-  const baseReport = useMemo(() => buildReport(ds, settings, filters), [ds, settings, filters])
+  // `lang` entra nas dependências porque os textos e números do relatório mudam com o idioma.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const baseReport = useMemo(() => buildReport(ds, settings, filters), [ds, settings, filters, lang])
   // Destaques reescritos na prévia valem também para o painel e o PDF.
   const report = useMemo(
-    () => ({ ...baseReport, insights: baseReport.insights.map((t, i) => (edits.insights[i] ? { text: edits.insights[i] } : t)) }),
+    () => ({ ...baseReport, insights: baseReport.insights.map((ins, i) => (edits.insights[i] ? { text: edits.insights[i] } : ins)) }),
     [baseReport, edits.insights],
   )
   const filteredDs = useMemo(() => ({ ...ds, rows: applyFilters(ds, settings, filters).rows }), [ds, settings, filters])
@@ -113,6 +127,18 @@ export default function App() {
     })
   }, [])
 
+  const changeLang = (l: Locale) => {
+    // Um título que ainda é o automático acompanha o idioma; um título escrito pela pessoa fica como está.
+    const wasAuto = settings.title === autoTitle(ds)
+    setLocale(l)
+    setLang(l)
+    if (wasAuto) setSettings((s) => ({ ...s, title: autoTitle(ds) }))
+  }
+  useEffect(() => {
+    store.set('prisma.lang', lang)
+    document.documentElement.lang = t().numberLocale
+  }, [lang])
+
   useEffect(() => store.set('prisma.theme', themeId), [themeId])
   useEffect(() => {
     // O tema escolhido também colore e tipografa a página, não só os slides.
@@ -129,8 +155,8 @@ export default function App() {
   useEffect(() => store.set('prisma.view', view), [view])
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(() => setToast(null), 2800)
-    return () => clearTimeout(t)
+    const id = setTimeout(() => setToast(null), 2800)
+    return () => clearTimeout(id)
   }, [toast])
 
   const loadData = useCallback((next: Dataset) => {
@@ -146,14 +172,14 @@ export default function App() {
       try {
         const wb = await readWorkbook(file)
         const next = sheetToDataset(wb, 0, file.name)
-        if (!next.rows.length) throw new Error('vazio')
+        if (!next.rows.length) throw new Error('empty')
         setWorkbook(wb)
         setSheet(0)
         loadData(next)
-        setToast(`${next.rows.length} linhas lidas de ${file.name}`)
+        setToast(t().rowsRead(next.rows.length, file.name))
       } catch (e) {
         console.error(e)
-        setError('Não foi possível ler este arquivo. Confira se é um .xlsx, .xls ou .csv com cabeçalho na primeira linha.')
+        setError(t().readError)
       }
     },
     [loadData],
@@ -163,7 +189,7 @@ export default function App() {
     if (!workbook) return
     const next = sheetToDataset(workbook, i, ds.fileName)
     if (!next.rows.length) {
-      setError('Esta aba está vazia.')
+      setError(t().emptySheet)
       return
     }
     setSheet(i)
@@ -174,18 +200,24 @@ export default function App() {
 
   const onStageReady = useCallback(
     async (nodes: HTMLElement[]) => {
+      const format = exporting ?? 'pdf'
+      const T = t()
       try {
-        const blob = await slidesToPdf(nodes)
-        const result = await saveBlob(blob, `${slug(settings.title)}.pdf`)
-        setToast(result === 'saved' ? 'PDF gerado' : result === 'declined' ? 'Download cancelado' : 'Não foi possível salvar o PDF aqui')
+        const images = await captureSlides(nodes)
+        // Os títulos viram as anotações de cada slide no PowerPoint (e o texto alternativo da imagem).
+        const notes = nodes.map((n) => n.querySelector('.s-title, .cover-title')?.textContent?.trim() ?? '')
+        const blob = format === 'pptx' ? await slidesToPptx(images, settings.title, notes) : await slidesToPdf(images)
+        const result = await saveBlob(blob, `${slug(settings.title)}.${format}`)
+        const label = format === 'pptx' ? 'PowerPoint' : 'PDF'
+        setToast(result === 'saved' ? T.saved(label) : result === 'declined' ? T.declined : T.saveFailed)
       } catch (e) {
         console.error(e)
-        setToast('Erro ao gerar o PDF')
+        setToast(T.exportError)
       } finally {
-        setExporting(false)
+        setExporting(null)
       }
     },
-    [settings.title],
+    [settings.title, exporting],
   )
 
   return (
@@ -200,20 +232,16 @@ export default function App() {
             Prisma Reports
           </div>
           <div className="file-meta">
-            {ds.fileName} · {ds.rows.length} linhas · {ds.columns.length} colunas
+            {ds.fileName} · {t().meta(ds.rows.length, ds.columns.length)}
           </div>
           <div className="actions">
             <ThemePicker value={theme} onChange={setThemeId} />
             <button type="button" onClick={() => fileInput.current?.click()}>
-              Abrir planilha
+              {t().openFile}
             </button>
-            <button type="button" className="primary" onClick={() => setExporting(true)} disabled={exporting || !exportSlides.length}>
-              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M8 2v8m0 0 3-3m-3 3L5 7M3 13h10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {exporting ? 'Gerando…' : 'Baixar slides (PDF)'}
-            </button>
+            <ExportMenu busy={!!exporting} disabled={!exportSlides.length} onExport={setExporting} />
           </div>
+          <LanguageSwitcher value={lang} onChange={changeLang} />
         </div>
       </header>
 
@@ -225,18 +253,18 @@ export default function App() {
 
           <section className="report-head">
             <div>
-              <h1 className="report-title">{settings.title.trim() || 'Relatório'}</h1>
+              <h1 className="report-title">{settings.title.trim() || t().fallbackTitle}</h1>
               <p className="report-sub">
-                {ds.fileName} · {report.rowCount === ds.rows.length ? `${ds.rows.length} linhas` : `${report.rowCount} de ${ds.rows.length} linhas`}
-                {report.filterLabel && ` (${report.filterLabel})`} · gerado em {today()}
+                {ds.fileName} · {report.rowCount === ds.rows.length ? t().rowsLabel(int(ds.rows.length)) : t().rowsOf(int(report.rowCount), int(ds.rows.length))}
+                {report.filterLabel && ` (${report.filterLabel})`} · {t().generatedOn(today())}
               </p>
             </div>
-            <div className="tabs" role="tablist" aria-label="Visualização">
+            <div className="tabs" role="tablist" aria-label={t().viewAria}>
               <button type="button" role="tab" aria-selected={view === 'painel'} onClick={() => setView('painel')}>
-                Painel
+                {t().dashboardTab}
               </button>
               <button type="button" role="tab" aria-selected={view === 'slides'} onClick={() => setView('slides')}>
-                Slides <span className="count">{exportSlides.length}</span>
+                {t().slidesTab} <span className="count">{exportSlides.length}</span>
               </button>
             </div>
           </section>

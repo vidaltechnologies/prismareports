@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { useEffect, useState } from 'react'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 
 export function Uploader({ sample, error, onFile, inputRef }: Props) {
   const [over, setOver] = useState(false)
+  const T = t()
 
   // Soltar o arquivo em qualquer lugar da página também funciona.
   useEffect(() => {
@@ -31,7 +33,7 @@ export function Uploader({ sample, error, onFile, inputRef }: Props) {
       className={`drop${over ? ' over' : ''}`}
       tabIndex={0}
       role="button"
-      aria-label="Enviar arquivo Excel ou CSV"
+      aria-label={T.uploadAria}
       onClick={() => inputRef.current?.click()}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -49,9 +51,9 @@ export function Uploader({ sample, error, onFile, inputRef }: Props) {
         <path d="M11 12h12M11 17h12M11 22h7" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" />
       </svg>
       <div className="txt">
-        <strong>Arraste um arquivo .xlsx, .xls ou .csv aqui</strong>
-        <p>Os dados são lidos no seu navegador e não saem do seu computador. A primeira linha deve conter os nomes das colunas.</p>
-        {sample && <div className="sample-note">Mostrando dados de exemplo (vendas fictícias). Envie sua planilha para substituir.</div>}
+        <strong>{T.uploadTitle}</strong>
+        <p>{T.uploadHelp}</p>
+        {sample && <div className="sample-note">{T.sampleNote}</div>}
         {error && <div className="error">{error}</div>}
       </div>
       <input

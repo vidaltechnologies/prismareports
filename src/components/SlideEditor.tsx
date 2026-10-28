@@ -1,5 +1,6 @@
+import { t } from '../i18n'
 import type { Report } from '../lib/report'
-import { slideDef, type SlideId, type TextEdit, type TextEdits } from '../slides/slides'
+import { slideDef, slideName, type SlideId, type TextEdit, type TextEdits } from '../slides/slides'
 import type { Theme } from '../themes'
 import { ScaledSlide } from './ScaledSlide'
 
@@ -26,6 +27,7 @@ export function visibleSlides(deck: DeckItem[], R: Report) {
 }
 
 export function SlideEditor({ report, theme, deck, onDeck, selected, onSelect, edits, onEdit, onResetEdits }: Props) {
+  const T = t()
   const usable = deck.filter((d) => slideDef(d.id).available(report))
   const visible = visibleSlides(deck, report)
   const total = visible.length
@@ -48,30 +50,30 @@ export function SlideEditor({ report, theme, deck, onDeck, selected, onSelect, e
 
   return (
     <div className="editor">
-      <ol className="thumbs" aria-label="Slides">
+      <ol className="thumbs" aria-label={T.slidesAria}>
         {usable.map((d, i) => (
           <li key={d.id} className={`thumb${d.id === current?.id ? ' selected' : ''}${d.hidden ? ' is-hidden' : ''}`}>
-            <button type="button" className="thumb-view" onClick={() => onSelect(d.id)} aria-label={`Ver slide ${slideDef(d.id).name}`} aria-current={d.id === current?.id}>
+            <button type="button" className="thumb-view" onClick={() => onSelect(d.id)} aria-label={T.viewSlide(slideName(d.id))} aria-current={d.id === current?.id}>
               <span className="thumb-no">{d.hidden ? '–' : numberOf(d.id)}</span>
               <ScaledSlide id={d.id} report={report} theme={theme} edits={edits} index={d.hidden ? 0 : numberOf(d.id)} total={total} />
             </button>
             <div className="thumb-bar">
               <span className="thumb-name">
-                {slideDef(d.id).name}
-                {d.hidden && <em>oculto</em>}
+                {slideName(d.id)}
+                {d.hidden && <em>{T.hidden}</em>}
               </span>
               <span className="thumb-actions">
-                <button type="button" className="icon" onClick={() => move(d.id, -1)} disabled={i === 0} aria-label={`Subir ${slideDef(d.id).name}`} title="Subir">
+                <button type="button" className="icon" onClick={() => move(d.id, -1)} disabled={i === 0} aria-label={`${T.moveUp}: ${slideName(d.id)}`} title={T.moveUp}>
                   <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
                     <path d="M3 8.5 7 4.5l4 4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                <button type="button" className="icon" onClick={() => move(d.id, 1)} disabled={i === usable.length - 1} aria-label={`Descer ${slideDef(d.id).name}`} title="Descer">
+                <button type="button" className="icon" onClick={() => move(d.id, 1)} disabled={i === usable.length - 1} aria-label={`${T.moveDown}: ${slideName(d.id)}`} title={T.moveDown}>
                   <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
                     <path d="M3 5.5 7 9.5l4-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                <button type="button" className="icon" onClick={() => toggle(d.id)} aria-pressed={d.hidden} aria-label={d.hidden ? `Mostrar ${slideDef(d.id).name}` : `Ocultar ${slideDef(d.id).name}`} title={d.hidden ? 'Mostrar' : 'Ocultar'}>
+                <button type="button" className="icon" onClick={() => toggle(d.id)} aria-pressed={d.hidden} aria-label={`${d.hidden ? T.show : T.hide}: ${slideName(d.id)}`} title={d.hidden ? T.show : T.hide}>
                   {d.hidden ? (
                     <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
                       <path d="M1.5 7S3.5 3 7 3s5.5 4 5.5 4-2 4-5.5 4S1.5 7 1.5 7Z M2 12 12 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -92,12 +94,10 @@ export function SlideEditor({ report, theme, deck, onDeck, selected, onSelect, e
         <div className="stage">
           <ScaledSlide id={current.id} report={report} theme={theme} edits={edits} onEdit={onEdit} index={currentNo} total={total} interactive />
           <p className="stage-note">
-            {current.hidden
-              ? 'Este slide está oculto e não entra no PDF.'
-              : `Slide ${currentNo} de ${total}. Clique no título ou nos destaques para editar o texto. Use as setas para mudar a ordem e o olho para ocultar um slide.`}
+            {current.hidden ? T.hiddenNote : T.slideNote(currentNo, total)}
             {(Object.keys(edits.titles).length > 0 || Object.keys(edits.insights).length > 0) && (
               <button type="button" className="link" onClick={onResetEdits}>
-                Restaurar textos automáticos
+                {T.restoreTexts}
               </button>
             )}
           </p>

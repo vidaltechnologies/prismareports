@@ -1,4 +1,5 @@
-import { compact, fmt, monthLabel, pct } from './format'
+import { t } from '../i18n'
+import { compact, dateLabel, fmt, monthLabel, pct } from './format'
 import { isEmpty, parseDate, parseNum, type Column, type Dataset, type Row } from './parse'
 
 export type Agg = 'sum' | 'avg' | 'count'
@@ -59,7 +60,13 @@ interface Acc {
 }
 
 export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-export const cellText = (v: Row[string]) => (isEmpty(v) ? '(vazio)' : String(v).trim())
+export const cellText = (v: Row[string]) => (isEmpty(v) ? t().empty : String(v).trim())
+
+/** Título automático no idioma atual. */
+export function autoTitle(ds: Dataset) {
+  const base = ds.fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ')
+  return ds.sample ? t().defaultTitleSample : t().defaultTitle(base)
+}
 
 export function defaultSettings(ds: Dataset): Settings {
   const cats = ds.columns.filter((c) => c.type === 'category')
@@ -67,9 +74,8 @@ export function defaultSettings(ds: Dataset): Settings {
   const dates = ds.columns.filter((c) => c.type === 'date')
   const cat = cats.find((c) => c.distinct >= 2 && c.distinct <= 12) ?? cats[0] ?? ds.columns[0]
   const val = nums.find((n) => /receita|valor|total|venda|faturamento|amount|revenue|price|preço/i.test(n.name)) ?? nums[0]
-  const base = ds.fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ')
   return {
-    title: ds.sample ? 'Relatório de vendas' : `Relatório · ${base}`,
+    title: autoTitle(ds),
     cat: cat?.name ?? '',
     val: val?.name ?? '',
     agg: val ? 'sum' : 'count',
@@ -116,11 +122,11 @@ export function applyFilters(ds: Dataset, s: Settings, f: Filters): { rows: Row[
   })
   const parts: string[] = []
   if (byDate) {
-    if (f.from && f.to) parts.push(f.from === f.to ? monthLabel(f.from) : `${monthLabel(f.from)} a ${monthLabel(f.to)}`)
-    else if (f.from) parts.push(`a partir de ${monthLabel(f.from)}`)
-    else parts.push(`até ${monthLabel(f.to)}`)
+    if (f.from && f.to) parts.push(f.from === f.to ? monthLabel(f.from) : t().filterRange(monthLabel(f.from), monthLabel(f.to)))
+    else if (f.from) parts.push(t().filterFrom(monthLabel(f.from)))
+    else parts.push(t().filterTo(monthLabel(f.to)))
   }
-  if (byValue) parts.push(`${f.col}: ${f.values.length > 3 ? `${f.values.slice(0, 3).join(', ')} e mais ${f.values.length - 3}` : f.values.join(', ')}`)
+  if (byValue) parts.push(`${f.col}: ${f.values.length > 3 ? t().filterMore(f.values.slice(0, 3).join(', '), f.values.length - 3) : f.values.join(', ')}`)
   return { rows, label: parts.join(' · ') }
 }
 
@@ -130,7 +136,7 @@ export function topWithOthers(groups: Group[], n: number): Group[] {
   return [
     ...groups.slice(0, n - 1),
     {
-      label: `Outros (${rest.length})`,
+      label: t().others(rest.length),
       value: rest.reduce((s, g) => s + g.value, 0),
       share: rest.reduce((s, g) => s + g.share, 0),
     },
@@ -209,12 +215,12 @@ export function buildReport(ds: Dataset, s: Settings, f: Filters = NO_FILTERS): 
       labels: top.map((g) => g.label),
       a: top.map((g) => g.value),
       b: top.map((g) => (second.has(g.label) ? metric(second.get(g.label)!, agg2) : 0)),
-      nameA: agg === 'count' ? 'Linhas' : s.val,
+      nameA: agg === 'count' ? t().rows : s.val,
       nameB: s.val2,
     }
   }
 
-  const aggLabel = agg === 'sum' ? `Soma de ${s.val}` : agg === 'avg' ? `Média de ${s.val}` : 'Quantidade de linhas'
+  const aggLabel = agg === 'sum' ? t().aggSum(s.val) : agg === 'avg' ? t().aggAvg(s.val) : t().aggCount
   const report: Report = {
     settings: { ...s, agg },
     fileName: ds.fileName,
@@ -252,7 +258,7 @@ function buildDetails(ds: Dataset, s: Settings, rows: Row[]): Report['details'] 
   const sorted = s.val ? [...rows].sort((a, b) => (parseNum(b[s.val]) ?? -Infinity) - (parseNum(a[s.val]) ?? -Infinity)) : rows
   const cell = (c: Column, v: Row[string]) => {
     if (isEmpty(v)) return ''
-    if (c.type === 'date') return parseDate(v)?.toLocaleDateString('pt-BR') ?? String(v)
+    if (c.type === 'date') return (parseDate(v) ? dateLabel(parseDate(v)!) : String(v))
     if (c.type === 'number') {
       const n = parseNum(v)
       return n === null ? String(v) : fmt(n)
@@ -264,25 +270,26 @@ function buildDetails(ds: Dataset, s: Settings, rows: Row[]): Report['details'] 
 
 function buildInsights(R: Report): Insight[] {
   const out: Insight[] = []
+  const T = t()
   const { cat, val, agg } = R.settings
   const top = R.groups[0]
-  if (top) out.push({ strong: top.label, text: `${top.label} lidera em ${cat}, com ${pct(top.share)} do ${agg === 'count' ? 'total de linhas' : 'total de ' + val}.` })
+  if (top) out.push({ strong: top.label, text: T.insLeader(top.label, cat, pct(top.share), agg === 'count' ? T.insOfRows : T.insOfValue(val)) })
   if (R.groups.length >= 3) {
     const top3 = R.groups.slice(0, 3).reduce((s, x) => s + x.share, 0)
-    out.push({ text: `Os 3 maiores grupos somam ${pct(top3)} do total, entre ${R.groups.length} grupos.` })
+    out.push({ text: T.insTop3(pct(top3), R.groups.length) })
   }
   if (R.groups.length >= 2) {
     const last = R.groups[R.groups.length - 1]
-    out.push({ strong: last.label, text: `Menor resultado: ${last.label} (${fmt(last.value)}).` })
+    out.push({ strong: last.label, text: T.insLowest(last.label, fmt(last.value)) })
   }
   if (R.series) {
     const v = R.series.values
     const a = v[v.length - 2]
     const b = v[v.length - 1]
-    if (a) out.push({ text: `No último mês (${R.series.labels.at(-1)}) a variação foi de ${b >= a ? '+' : ''}${pct((b - a) / Math.abs(a))} em relação ao mês anterior.` })
+    if (a) out.push({ text: T.insLastMonth(R.series.labels.at(-1)!, `${b >= a ? '+' : ''}${pct((b - a) / Math.abs(a))}`) })
     const iMax = v.indexOf(Math.max(...v))
-    out.push({ text: `Melhor mês: ${R.series.labels[iMax]} (${compact(v[iMax])}).` })
+    out.push({ text: T.insBestMonth(R.series.labels[iMax], compact(v[iMax])) })
   }
-  if (R.hasValue) out.push({ text: `${val} varia de ${fmt(R.min)} a ${fmt(R.max)}, com média de ${fmt(R.avg)} por linha.` })
+  if (R.hasValue) out.push({ text: T.insRange(val, fmt(R.min), fmt(R.max), fmt(R.avg)) })
   return out
 }
