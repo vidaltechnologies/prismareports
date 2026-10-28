@@ -6,7 +6,7 @@
 
 <p align="center">
   Upload an <strong>Excel or CSV</strong> file and instantly get a report with key figures, percentages and charts.<br />
-  One click turns the report into a slide presentation in PDF.
+  Arrange the presentation right on the page and download the slides as PDF.
 </p>
 
 <p align="center">
@@ -14,11 +14,11 @@
 </p>
 
 <p align="center">
-  <img alt="HTML5" src="https://img.shields.io/badge/HTML5-single_page-E34F26?logo=html5&logoColor=white" />
-  <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-ES2020-F7DF1E?logo=javascript&logoColor=black" />
-  <img alt="SheetJS" src="https://img.shields.io/badge/SheetJS-0.18-217346?logo=microsoftexcel&logoColor=white" />
+  <img alt="React" src="https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white" />
   <img alt="Chart.js" src="https://img.shields.io/badge/Chart.js-4-FF6384?logo=chartdotjs&logoColor=white" />
-  <img alt="jsPDF" src="https://img.shields.io/badge/jsPDF-2.5-B30B00?logo=adobeacrobatreader&logoColor=white" />
+  <img alt="GitHub Pages" src="https://img.shields.io/badge/Hosting-GitHub_Pages-222222?logo=github&logoColor=white" />
 </p>
 
 ![Prisma Reports home page with key figures and percentage rings](docs/screenshots/inicio.png)
@@ -26,11 +26,12 @@
 ## About the project
 
 Prisma Reports turns a spreadsheet into a visual report, with no charts to build by hand.
-You upload the file, choose what to analyze and download the result ready to present, as
-PDF slides.
+You upload the file, choose what to analyze, adjust the slides and download the finished
+presentation as PDF.
 
-It is inspired by [beautiful.ai](https://www.beautiful.ai/): good-looking slides whose
-layouts adapt to the content, here driven by the spreadsheet's data.
+It is inspired by [beautiful.ai](https://www.beautiful.ai/): good-looking slides with
+layouts that adapt to the content and ready-made themes, here driven by the spreadsheet's
+data.
 
 Everything runs in the browser. Your data is never sent to a server.
 
@@ -39,7 +40,7 @@ Everything runs in the browser. Your data is never sent to a server.
 - Read any spreadsheet with a header row, with no setup.
 - Show the most important numbers in a clear, visual way.
 - Let people change the analysis (grouping, value, calculation) and see the result right away.
-- Produce a PDF presentation ready to send or present.
+- Produce a PDF that matches the preview, ready to send or present.
 
 ## Features
 
@@ -49,34 +50,43 @@ Everything runs in the browser. Your data is never sent to a server.
 - **Automatic column detection:** each column is recognized as number, date, category or
   text, including Brazilian formats (`1.234,56`, `R$ 10,00`, `dd/mm/yyyy`). CSV separated by
   `;`, `,` or tab, in UTF-8 or Windows-1252.
-- **Key figures:** row count, sum and average of the chosen value, number of groups and
-  the largest group.
-- **Percentage rings:** each group's share of the total.
-- **Charts:** bars by group, a doughnut with the distribution and a monthly timeline.
-- **Automatic highlights:** short sentences on the leader, how concentrated the top groups
-  are, last month's change and the best month.
+- **Dashboard:** key figures, percentage rings, bar, doughnut and timeline charts,
+  automatically written highlights and a table preview.
 - **Dynamic analysis:** choose which column to group by, which value to use and whether to
-  sum, average or count. Everything updates instantly.
-- **PDF slides:** a 16:9 presentation with cover, key figures, shares, charts, highlights
-  and ranking.
-- **Light and dark theme:** the page follows the system theme.
+  sum, average or count. Dashboard and slides update instantly.
+- **Slide editor:** a preview of every slide on the page, where you can reorder and hide
+  slides. What you see in the preview is exactly what goes into the PDF.
+- **Three themes:** Prisma, Executivo and Vibrante, each with its own colors and fonts,
+  picked from a dropdown. The theme applies to the page, the slides and the PDF.
+- **PDF slides:** a 16:9 presentation with cover, key figures, shares, bars, distribution,
+  monthly trend, highlights and ranking.
+- **Light and dark mode:** the page follows the system setting.
 - **Responsive:** works on desktop and mobile.
 
 The interface is currently in Portuguese.
 
 ## Screens
 
-### Desktop
+### Slide editor and themes
+
+![Slides tab with the slide list on the left and a large preview on the right](docs/screenshots/editor.png)
+
+| Theme picker | Dashboard in dark mode |
+| --- | --- |
+| ![Dropdown with the three themes](docs/screenshots/temas.png) | ![Page in dark mode](docs/screenshots/tema-escuro.png) |
+
+| Prisma, Executivo and Vibrante themes |
+| --- |
+| ![Report cover in the three themes](docs/screenshots/temas-capas.png) |
+| ![Bar chart slide in the three themes](docs/screenshots/temas-graficos.png) |
+
+### Dashboard
 
 | Charts and highlights | Data table |
 | --- | --- |
 | ![Charts and highlights](docs/screenshots/graficos.png) | ![Data table with each column's type](docs/screenshots/dados.png) |
 
-| Dark theme | |
-| --- | --- |
-| ![Page in dark theme](docs/screenshots/tema-escuro.png) | |
-
-### PDF slides
+### PDF slides (Prisma theme)
 
 | Cover | Key figures |
 | --- | --- |
@@ -96,59 +106,90 @@ The interface is currently in Portuguese.
 
 ### Mobile
 
-| Home | Key figures | Charts |
+| Home | Key figures | Slides |
 | --- | --- | --- |
-| <img src="docs/screenshots/celular-inicio.png" alt="Home on mobile" width="260" /> | <img src="docs/screenshots/celular-indicadores.png" alt="Key figures on mobile" width="260" /> | <img src="docs/screenshots/celular-graficos.png" alt="Charts on mobile" width="260" /> |
+| <img src="docs/screenshots/celular-inicio.png" alt="Home on mobile" width="260" /> | <img src="docs/screenshots/celular-indicadores.png" alt="Key figures on mobile" width="260" /> | <img src="docs/screenshots/celular-slides.png" alt="Slides on mobile" width="260" /> |
 
 ## Technologies
 
 | Technology | What it is for |
 | --- | --- |
-| HTML, CSS and JavaScript | Single page, no build step |
+| [React](https://react.dev/) | Interface components and one component per slide type |
+| [TypeScript](https://www.typescriptlang.org/) | Typed code that is safer to maintain |
+| [Vite](https://vite.dev/) | Development server and production build |
 | [SheetJS](https://sheetjs.com/) | Reading Excel and CSV files |
 | [Chart.js](https://www.chartjs.org/) | Bar, doughnut and line charts |
-| [jsPDF](https://github.com/parallax/jsPDF) | Building the PDF slides |
-| Canvas | Percentage rings |
+| [html-to-image](https://github.com/bubkoo/html-to-image) and [jsPDF](https://github.com/parallax/jsPDF) | Capturing the slides and building the PDF |
+| [Fontsource](https://fontsource.org/) | Theme fonts bundled with the project |
 
-Libraries load from the jsDelivr CDN. The project has no database, login or server: the
-page can be hosted as a static file (for example, on GitHub Pages).
+The project has no database, login or server. The build is a set of static files,
+published to GitHub Pages every time the `main` branch is updated.
 
 ## Running it locally
 
-Nothing to install. Download the project and open `index.html` in your browser:
+You need [Node.js](https://nodejs.org/) 20 or newer.
 
 ```bash
 git clone https://github.com/vidaltechnologies/prismareports.git
 cd prismareports
+npm install
+npm run dev
 ```
 
-Then double-click `index.html`. If you prefer a local server:
+Then open http://localhost:5173. The page opens with sample sales data. To try another
+file, use `exemplos/despesas-por-departamento.csv`.
 
-```bash
-npx serve .
-```
+Other commands:
 
-and open http://localhost:3000.
+| Command | What it does |
+| --- | --- |
+| `npm run build` | Builds the production version into `dist/` |
+| `npm run preview` | Serves the version built by `build` |
+| `npm run build:single` | Builds a single self-contained `index.html` into `dist-single/` |
+| `npm run typecheck` | Checks the code's types |
 
-The page opens with sample sales data. To try another file, use
-`exemplos/despesas-por-departamento.csv`.
+### Publishing
+
+The `.github/workflows/deploy.yml` workflow publishes the site to GitHub Pages whenever
+`main` is updated. To turn it on, go to the repository's **Settings → Pages** and choose
+**GitHub Actions** as the source.
 
 ## Code structure
 
 ```
-index.html                 # Whole page: layout, styles, parsing, charts and PDF
-exemplos/
-└── despesas-por-departamento.csv  # Test spreadsheet (CSV with ;)
-docs/
-├── icon.svg               # Logo used in this README
-└── screenshots/           # Images used in this README
+src/
+├── main.tsx                # Entry point
+├── App.tsx                 # Page state: data, settings, theme, slides and export
+├── themes.ts               # The three themes (colors and fonts)
+├── styles.css              # Page and slide styles
+├── components/
+│   ├── Uploader.tsx        # Drop area and file picker
+│   ├── Controls.tsx        # Title, sheet, grouping, value, calculation and timeline
+│   ├── Dashboard.tsx       # Dashboard tab
+│   ├── SlideEditor.tsx     # Slides tab: preview, order and hidden slides
+│   ├── ThemePicker.tsx     # Theme dropdown
+│   ├── ScaledSlide.tsx     # 1280×720 slide scaled down to fit the screen
+│   ├── ExportStage.tsx     # Renders slides at full size for the PDF
+│   ├── ChartCanvas.tsx     # Chart.js chart as a component
+│   └── Ring.tsx            # SVG percentage ring
+├── slides/
+│   └── slides.tsx          # One component per slide type and the slide list
+└── lib/
+    ├── parse.ts            # Spreadsheet reading and column type detection
+    ├── report.ts           # Grouping, totals, monthly series and highlights
+    ├── charts.ts           # Chart configuration
+    ├── exportPdf.ts        # Slide capture and PDF generation
+    ├── format.ts           # Numbers, percentages and dates in pt-BR
+    └── sample.ts           # Sample data
+exemplos/                   # Test spreadsheet
+docs/                       # Logo and images used in this README
 ```
 
 ## Next steps
 
-- Move to Vite + React + TypeScript, with one component per slide type.
-- Slide preview and editing on the page, beautiful.ai style: themes, reorder and hide slides.
+- Edit slide text right in the preview (titles and highlights).
 - Filters by period and category.
+- More slide types, such as a two-column comparison and a detail table.
 
 ---
 
