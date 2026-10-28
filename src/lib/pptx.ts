@@ -1,6 +1,7 @@
 import type PptxGenJS from 'pptxgenjs'
 import { t } from '../i18n'
 import { kpiItems, slideHeading, type SlideId, type TextEdits } from '../slides/slides'
+import { coverLogoColors, LOGO_BOX, LOGO_LINES, LOGO_PRISM } from '../logo'
 import type { Theme } from '../themes'
 import { compact, fmt, int, pct, today } from './format'
 import { topWithOthers, type Report } from './report'
@@ -83,11 +84,27 @@ function cover(c: Ctx) {
   const S = theme.slide
   const slide = pptx.addSlide()
   slide.background = { color: hex(S.coverBg) }
-  // O prisma da capa: um triângulo com uma faixa vertical no meio.
-  const box = { x: u(800), y: u(286), size: u(440) }
-  const tri = { x: box.x + (box.size * 20) / 420, y: box.y + (box.size * 30) / 420, w: (box.size * 380) / 420, h: (box.size * 370) / 420 }
-  slide.addShape('triangle', { ...tri, fill: { color: hex(S.coverShape) }, line: { type: 'none' } })
-  slide.addShape('rect', { x: tri.x + tri.w / 2 - u(5), y: tri.y, w: u(10), h: tri.h, fill: { color: hex(S.coverShape2) }, line: { type: 'none' } })
+  // O símbolo da capa, o mesmo da prévia: linhas e um triângulo vazado, editáveis no PowerPoint.
+  const logo = coverLogoColors(theme)
+  const box = { x: u(1280 - 52 - 450), y: u(206), w: u(450) }
+  const k = box.w / LOGO_BOX.w
+  const at = ([x, y]: [number, number]) => [box.x + (x - LOGO_BOX.x) * k, box.y + (y - LOGO_BOX.y) * k] as const
+  for (const l of LOGO_LINES) {
+    const [x1, y1] = at(l.from)
+    const [x2, y2] = at(l.to)
+    slide.addShape('line', {
+      x: Math.min(x1, x2),
+      y: Math.min(y1, y2),
+      w: Math.abs(x2 - x1),
+      h: Math.abs(y2 - y1),
+      flipV: (x2 - x1) * (y2 - y1) < 0,
+      line: { color: hex(typeof l.role === 'number' ? logo.rays[l.role] : logo.beam), width: l.width * k * 72, transparency: l.role === 'beamInside' ? 65 : 0 },
+    })
+  }
+  const [, top] = at(LOGO_PRISM.points[0])
+  const [right, base] = at(LOGO_PRISM.points[1])
+  const [left] = at(LOGO_PRISM.points[2])
+  slide.addShape('triangle', { x: left, y: top, w: right - left, h: base - top, fill: { type: 'none' }, line: { color: hex(logo.prism), width: LOGO_PRISM.width * k * 72 } })
   slide.addText('PRISMA REPORTS', { x: u(88), y: u(64), w: 5, h: u(28), fontFace: c.body, fontSize: pt(14), bold: true, color: hex(S.coverMuted), charSpacing: 2, margin: 0 })
   slide.addText(R.settings.title, { x: u(88), y: u(190), w: u(700), h: u(250), fontFace: c.display, fontSize: pt(76), bold: true, color: hex(S.coverFg), margin: 0, valign: 'bottom', fit: 'shrink' })
   const meta = [`${R.fileName} · ${t().rowsLabel(int(R.rowCount))} · ${today()}`]

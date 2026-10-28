@@ -209,7 +209,7 @@ button.link { border: 0; background: none; padding: 0; color: var(--accent); tex
 .s-foot { height: 56px; border-top: 1px solid var(--s-line); display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--s-muted); }
 
 .cover { background: var(--s-cover-bg); color: var(--s-cover-fg); justify-content: center; padding: 80px 88px; }
-.cover-art { position: absolute; right: 40px; bottom: -6px; width: 440px; height: 440px; }
+.cover-art { position: absolute; right: 52px; top: 206px; width: 450px; height: 309px; }
 .cover-kicker { color: var(--s-cover-fg); opacity: 0.75; position: absolute; top: 72px; left: 88px; }
 .cover-title { font: 700 76px/1.04 var(--s-display); letter-spacing: -0.025em; margin: 0; max-width: 700px; color: var(--s-cover-fg); text-wrap: balance; }
 .cover-meta { margin: 28px 0 0; font-size: 20px; color: var(--s-cover-muted); max-width: 700px; }
