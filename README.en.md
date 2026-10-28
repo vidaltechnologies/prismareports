@@ -29,10 +29,6 @@ Prisma Reports turns a spreadsheet into a visual report, with no charts to build
 You upload the file, choose what to analyze, adjust the slides and download the finished
 presentation as PDF or PowerPoint.
 
-It is inspired by [beautiful.ai](https://www.beautiful.ai/): good-looking slides with
-layouts that adapt to the content and ready-made themes, here driven by the spreadsheet's
-data.
-
 Everything runs in the browser. Your data is never sent to a server.
 
 ### Goals
@@ -224,8 +220,6 @@ docs/                       # Logo and images used in this README
 ## Next steps
 
 - Save a report (settings, filters and text) to open again later.
-- PowerPoint with editable text and charts, instead of one image per slide.
-- Translate the column names of the sample data too.
 
 ---
 

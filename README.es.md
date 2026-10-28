@@ -29,10 +29,6 @@ Prisma Reports convierte una hoja de cálculo en un informe visual, sin armar gr
 mano. Subes el archivo, eliges qué analizar, ajustas las diapositivas y descargas la
 presentación lista en PDF o PowerPoint.
 
-La inspiración es [beautiful.ai](https://www.beautiful.ai/): diapositivas atractivas, con
-diseños que se ajustan solos al contenido y temas listos, aquí alimentadas por los datos
-de la hoja.
-
 Todo funciona en el navegador. Los datos no se envían a ningún servidor.
 
 ### Objetivos
@@ -225,8 +221,6 @@ docs/                       # Logo e imágenes usadas en este README
 ## Próximos pasos
 
 - Guardar un informe (configuración, filtros y textos) para abrirlo de nuevo después.
-- PowerPoint con textos y gráficos editables, en lugar de una imagen por diapositiva.
-- Traducir también los nombres de las columnas de los datos de ejemplo.
 
 ---
 

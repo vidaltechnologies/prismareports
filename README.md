@@ -29,9 +29,6 @@ O Prisma Reports transforma uma planilha em um relatório visual sem que ningué
 montar gráficos à mão. A pessoa envia o arquivo, escolhe o que quer analisar, ajusta os
 slides e baixa a apresentação pronta em PDF ou PowerPoint.
 
-A inspiração é o [beautiful.ai](https://www.beautiful.ai/): slides bonitos, com layouts que
-se ajustam sozinhos ao conteúdo e temas prontos, aqui alimentados pelos dados da planilha.
-
 Tudo roda no navegador. Os dados não são enviados a nenhum servidor.
 
 ### Objetivos
@@ -220,8 +217,6 @@ docs/                       # Logo e imagens usadas neste README
 ## Próximos passos
 
 - Salvar um relatório (configurações, filtros e textos) para abrir de novo depois.
-- PowerPoint com textos e gráficos editáveis, em vez de uma imagem por slide.
-- Traduzir também os nomes das colunas dos dados de exemplo.
 
 ---
 
